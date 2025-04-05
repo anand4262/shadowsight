@@ -1,7 +1,7 @@
 "use client";
 
 import { useDropzone } from "react-dropzone";
-import { useEffect, useState } from "react";
+import {  useState } from "react";
 import readCSVFile from "@/utils/readCSVFile";
 import { UploadIcon } from "@/assets/icons";
 import { ShowcaseSection } from "@/components/Layouts/showcase-section";
@@ -74,10 +74,10 @@ export const UploadCsvFile = () => {
     <ShowcaseSection title="Upload your CSV files" className="!p-7">
       <div
         {...getRootProps()}
-        className="relative mb-5 flex flex-col items-center justify-center w-full h-40 rounded-xl border border-dashed border-gray-300 bg-gray-100 hover:border-[#5750F1] cursor-pointer p-4"
+        className="relative dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary mb-5 flex flex-col items-center justify-center w-full h-40 rounded-xl border border-dashed border-gray-300 bg-gray-100 hover:border-[#5750F1] cursor-pointer p-4"
       >
         <input {...getInputProps()} />
-        <div className="flex size-14 items-center justify-center rounded-full border border-gray-300 bg-white">
+        <div className="flex dark:border-dark-3 dark:bg-gray-dark size-14 items-center justify-center rounded-full border border-gray-300 bg-white">
           <UploadIcon />
         </div>
         <p className="mt-2 text-sm font-medium">
@@ -103,7 +103,7 @@ export const UploadCsvFile = () => {
       <div className="flex justify-end gap-3 mt-6">
         <button
           type="button"
-          className="rounded-lg border border-gray-400 px-6 py-2 text-sm font-medium text-gray-800 hover:shadow"
+          className="rounded-lg border border-gray-400 px-6 py-2 text-sm font-medium text-gray-800 hover:shadow dark:border-dark-3 dark:text-white"
           onClick={handleClear}
         >
           Clear

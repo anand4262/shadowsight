@@ -24,7 +24,7 @@ const UploadedFile = ({ message, size, progress, onClose }: UploadedFileProps) =
   }, [progress]);
 
   return (
-    <div className="relative rounded-xl border border-gray-300 bg-white shadow-sm p-4 transition-all">
+    <div className="relative dark:border-dark-3 dark:bg-gray-dark rounded-xl border border-gray-300 bg-white shadow-sm p-4 transition-all">
       <button
         onClick={onClose}
         className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition"

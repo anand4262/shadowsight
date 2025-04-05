@@ -5,9 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSidebarContext } from "../sidebar/sidebar-context";
 import { MenuIcon } from "./icons";
-import { Notification } from "./notification";
 import { ThemeToggleSwitch } from "./theme-toggle";
-import { UserInfo } from "./user-info";
 
 export function Header() {
   const { toggleSidebar, isMobile } = useSidebarContext();
@@ -36,9 +34,9 @@ export function Header() {
 
       <div className="max-xl:hidden">
         <h1 className="mb-0.5 text-heading-5 font-bold text-dark dark:text-white">
-          Dashboard
+            Dashboard
         </h1>
-        <p className="font-medium">Next.js Admin Dashboard Solution</p>
+        <p className="font-medium">Shadow Sight Dashboard </p>
       </div>
 
       <div className="flex flex-1 items-center justify-end gap-2 min-[375px]:gap-4">
@@ -53,12 +51,6 @@ export function Header() {
         </div>
 
         <ThemeToggleSwitch />
-
-        <Notification />
-
-        <div className="shrink-0">
-          <UserInfo />
-        </div>
       </div>
     </header>
   );

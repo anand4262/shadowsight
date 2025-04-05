@@ -5,7 +5,6 @@ import { TopChannels } from "@/components/Tables/top-channels";
 import { TopChannelsSkeleton } from "@/components/Tables/top-channels/skeleton";
 import { createTimeFrameExtractor } from "@/utils/timeframe-extractor";
 import { Suspense } from "react";
-import { ChatsCard } from "./_components/chats-card";
 import { OverviewCardsGroup } from "./_components/overview-cards";
 import { OverviewCardsSkeleton } from "./_components/overview-cards/skeleton";
 import { RegionLabels } from "./_components/region-labels";
@@ -52,10 +51,6 @@ export default async function Home({ searchParams }: PropsType) {
             <TopChannels />
           </Suspense>
         </div>
-
-        <Suspense fallback={null}>
-          <ChatsCard />
-        </Suspense>
       </div>
     </>
   );

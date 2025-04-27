@@ -2,12 +2,18 @@
 
 import { useDropzone } from "react-dropzone";
 import {  useState } from "react";
+import { useDispatch } from 'react-redux';
+import { setCsvData, setLoading, setError, setProcessedData, resetState } from '@/store/CSVSlice'; 
+import { AppDispatch } from "@/store/Store"; // Import Redux actions
+import { processData } from "@/utils/GlobalHelpers"
 import readCSVFile from "@/utils/readCSVFile";
 import { UploadIcon } from "@/assets/icons";
 import { ShowcaseSection } from "@/components/Layouts/showcase-section";
 import UploadedFile from "@/components/UploadedFile";
 
 export const UploadCsvFile = () => {
+  const dispatch = useDispatch<AppDispatch>();
+
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -42,17 +48,31 @@ export const UploadCsvFile = () => {
   };
 
   const handleClear = () => {
+    //dispatch(resetState());
     setSelectedFiles([]);
     setUploadProgress({});
     setUploadedFiles([]);
   };
 
-  const handleSave = () => {
-    uploadedFiles.forEach((file) => {
-      readCSVFile(file); // Parse all at once
-    });
-    alert("Files parsed!");
-  };
+  const handleSave = async () => {
+    dispatch(setLoading(true))
+    try {
+      for (const file of uploadedFiles) {
+        const parsedData = await readCSVFile(file);  // Wait for CSV to be parsed
+        dispatch(setCsvData(parsedData));  // Dispatch the parsed data to Redux store
+
+        // Optional: Process the data (e.g., aggregate counts, calculate risk score)
+        const processedData = processData(parsedData);
+        dispatch(setProcessedData(processedData));  // Store processed data in Redux
+
+        alert("Files parsed and saved!");
+      }
+    } catch (error) {
+      if (error instanceof Error) dispatch(setError(`Error parsing CSV: ${error.message}`));  // Handle errors and dispatch to Redux
+    } finally {
+      dispatch(setLoading(false));  // Set loading state to false after the operation
+    }
+  }
 
   const handleRemoveFile = (fileName: string) => {
     setSelectedFiles((prev) => prev.filter((file) => file.name !== fileName));

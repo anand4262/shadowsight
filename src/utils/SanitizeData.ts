@@ -1,5 +1,7 @@
 
-interface PoliciesBreached {
+import {CSVRecord} from "@/store/types/CSVTypes"
+
+/* interface PoliciesBreached {
     dataLeakage?: string[];
     pii?: string[];
     sensitive?: string[];
@@ -22,10 +24,12 @@ interface PoliciesBreached {
     status: string;
     managerAction: string;
     dataVolumeMB: number;  
-  }
-  
+  } */
+    interface ExtendedCSVRecord extends CSVRecord {
+      dataVolumeMB: number; 
+    }
   // Async data sanitization function
-  export const sanitizeDataAsync = async (data: CSVRecord[]): Promise<CSVRecord[]> => {
+  export const sanitizeDataAsync = async (data: ExtendedCSVRecord[]): Promise<ExtendedCSVRecord[]> => {
     try {
       // Check if the data is an array and is not empty
       if (!Array.isArray(data) || data.length === 0) {
@@ -33,7 +37,7 @@ interface PoliciesBreached {
       }
   
       // Process the data (trimming, filling missing values, etc.)
-      const cleanedData = await Promise.all(data.map(async (record: CSVRecord) => {
+      const cleanedData = await Promise.all(data.map(async (record: ExtendedCSVRecord) => {
         // Calculate risk score first (you only calculate once)
         const calculatedRiskScore = calculateRiskScore(record);
   
@@ -67,12 +71,40 @@ interface PoliciesBreached {
       }
   };
   
-  // Date format conversion from DD/MM/YYYY to YYYY-MM-DD
   const formatDate = (date: string): string => {
     if (!date) return '';
-    const [day, month, year] = date.split('/');
-    return `${year}-${month}-${day}`;
+    
+    // If the date is in DD/MM/YYYY format
+    const dateParts = date.split('/');
+    
+    if (dateParts.length === 3) {
+      const [day, month, year] = dateParts;
+      
+      // Convert to a valid date string (ISO format) YYYY-MM-DD
+      const validDateString = `${year}-${month}-${day}`;
+      const parsedDate = new Date(validDateString);
+  
+      // Check if the parsed date is valid
+      if (isNaN(parsedDate.getTime())) {
+        return '';  // Return empty if the date is invalid
+      }
+  
+      // Return the ISO string format
+      return parsedDate.toISOString();
+    }
+  
+    // If it's not in DD/MM/YYYY format, attempt to parse it directly (e.g., for YYYY-MM-DD)
+    const parsedDate = new Date(date);
+    
+    if (isNaN(parsedDate.getTime())) {
+      return '';  // Return empty string if invalid
+    }
+  
+    // Return the ISO string format
+    return parsedDate.toISOString();
   };
+  
+
   
   // Validating that the value is a number, and returning 0 if it's invalid
   const validateNumber = async (value: number): Promise<number> => {
@@ -80,7 +112,7 @@ interface PoliciesBreached {
   };
   
   // Risk score calculation based on rules
-  const calculateRiskScore = (activity: CSVRecord): number => {
+  const calculateRiskScore = (activity: ExtendedCSVRecord): number => {
     let score = activity.riskScore;
   
     // Add points if activity type includes "download"
@@ -102,7 +134,7 @@ interface PoliciesBreached {
   };
   
   // Example data for testing
-  const inputData: CSVRecord[] = [
+  const inputData: ExtendedCSVRecord[] = [
     {
       activityId: '01JHH7WVXCNK5YE83V5VBTBGEY',
       user: 'jacob.moore@zenith.com',
@@ -154,4 +186,4 @@ interface PoliciesBreached {
   
   // Call the sanitization function
   handleSanitizedData(); */
-  
+ 

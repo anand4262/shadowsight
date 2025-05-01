@@ -1,19 +1,22 @@
 "use client";
 
-import { useDropzone } from "react-dropzone";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/Store";
-import { addUploadedFile, updateProgress, removeFile, clearAllUploadedFiles } from "@/store/slice/uploadSlice";
+import { addUploadedFile, updateProgress, removeUploadedFile, clearAllUploadedFiles } from "@/store/slice/uploadSlice";
 import { setCsvData, setProcessedData, setLoading, setError, resetState } from "@/store/slice/CSVSlice";
 import { processData } from "@/utils/GlobalHelpers";
 import { ShowcaseSection } from "@/components/Layouts/showcase-section";
 import UploadedFile from "@/components/UploadedFile";
 import { UploadIcon } from "@/assets/icons";
-import readCSVFile from "@/utils/readCSVFile";  // Assuming this function handles CSV parsing
+import readCSVFile from "@/utils/readCSVFile";
+import { useDropzone } from "react-dropzone";
+import { useState } from "react";
+import {sanitizeDataAsync }from "@/utils/SanitizeData"
 
 export const UploadCsvFile = () => {
   const dispatch = useDispatch<AppDispatch>();
   const uploadedFiles = useSelector((state: RootState) => state.uploads.uploadedFiles);
+  const [fileObjects, setFileObjects] = useState<File[]>([]);  // Store actual File objects temporarily
 
   // File validation (CSV and size check)
   const validateFile = (file: File): boolean => {
@@ -35,12 +38,18 @@ export const UploadCsvFile = () => {
     if (validCsvFiles.length === 0) return;
 
     validCsvFiles.forEach((file) => {
-      // Store file metadata in Redux without parsing or simulating upload progress yet
-      dispatch(addUploadedFile({ file, uploadProgress: 0, status: "pending" }));
+      // Store file metadata (name, size, progress) in Redux
+      dispatch(addUploadedFile({ fileName: file.name, fileSize: file.size, uploadProgress: 0, status: "pending" }));
+
+      // Temporarily store the File object in component state
+      setFileObjects((prevFiles) => [...prevFiles, file]);
+
+      // Start the upload progress (real-time progress update)
+      simulateUpload(file);
     });
   };
 
-  // Simulate file upload progress (or actual file upload if needed)
+  // Simulate file upload progress (this will update the progress bar)
   const simulateUpload = (file: File) => {
     let progress = 0;
     const interval = setInterval(() => {
@@ -48,75 +57,69 @@ export const UploadCsvFile = () => {
       dispatch(updateProgress({ fileName: file.name, progress }));
 
       if (progress >= 100) {
-        clearInterval(interval); // Stop progress simulation when 100% is reached
+        clearInterval(interval);
         dispatch(updateProgress({ fileName: file.name, progress: 100 }));
       }
     }, 200); // Adjust the speed of progress simulation as needed
   };
 
-  // Parse CSV data after upload completes (on Save button click)
-  const parseCSVFile = (file: File) => {
-    return new Promise<void>((resolve, reject) => {
-      readCSVFile(file)
-        .then((parsedData) => {
-          dispatch(setCsvData(parsedData)); // Store parsed CSV data in Redux
-          const processedData = processData(parsedData); // Process parsed data if necessary
-          dispatch(setProcessedData(processedData)); // Store processed data in Redux
-          resolve();
-        })
-        .catch((error) => {
-          dispatch(setError("Error during CSV parsing: " + error.message));
-          reject(error);
-        });
-    });
+  // Parse CSV data after the upload is complete (on Save button click)
+  const parseCSVFile = async (file: File) => {
+    try {
+      const parsedData = await readCSVFile(file);  // Pass the actual File object
+      const sanitizedData = await sanitizeDataAsync(parsedData)
+      
+      dispatch(setCsvData(sanitizedData));  // Store parsed CSV data in Redux
+      const processedData = processData(parsedData); // Process parsed data if necessary
+      dispatch(setProcessedData(processedData)); // Store processed data in Redux
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        dispatch(setError("Error during CSV parsing: " + error.message));
+      } else {
+        dispatch(setError("An unknown error occurred during CSV parsing"));
+      }
+    }
   };
 
   // Handle Save: Parse CSV and process data when the user clicks Save
-  const handleSave = () => {
+  const handleSave = async () => {
     dispatch(setLoading(true));
 
-    // Loop through the uploaded files and trigger parsing only when the upload is complete
-    const uploadPromises = uploadedFiles.map((uploaded) => {
-      const file = uploaded.file;
+    try {
+      for (const uploaded of uploadedFiles) {
+        const { fileName, uploadProgress } = uploaded;
 
-      // Simulate the file upload progress (or use actual upload API logic)
-      simulateUpload(file);
-
-      // Return a Promise that resolves once the file is fully uploaded and parsed
-      return new Promise<void>((resolve, reject) => {
-        if (uploaded.uploadProgress === 100) {
-          parseCSVFile(file)
-            .then(() => resolve()) // Parsing is done, resolve the promise
-            .catch((error) => reject(error)); // If parsing fails, reject the promise
-        } else {
-          reject("Upload not completed");
+        // Only parse if the upload progress reaches 100%
+        if (uploadProgress === 100) {
+          // Find the actual File object in state by matching fileName
+          const file = fileObjects.find((f) => f.name === fileName);
+          if (file) {
+            await parseCSVFile(file);  // Only parse when progress is 100%
+          }
         }
-      });
-    });
-
-    // Once all files are processed, handle the final state change
-    Promise.all(uploadPromises)
-      .then(() => {
-        dispatch(setLoading(false));  // End loading state after process finishes
-      })
-      .catch((error) => {
-        dispatch(setError(error)); // Handle errors during parsing
-        dispatch(setLoading(false));  // End loading state on error
-      });
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        dispatch(setError(error.message));
+      }
+    } finally {
+      dispatch(setLoading(false));  // End loading state after process finishes
+    }
   };
 
   // Handle Clear: Reset all uploaded files and parsed data
   const handleClear = () => {
     dispatch(clearAllUploadedFiles()); // Clears the uploaded files from Redux
-    dispatch(resetState()); // Reset other data like processed data
+    dispatch(resetState());
+    setFileObjects([]);  // Reset the local state of file objects
   };
 
   // Handle File Removal: Remove individual files from Redux state
   const handleRemoveFile = (fileName: string) => {
-    dispatch(removeFile(fileName)); // Removes the specific file from Redux state
+    dispatch(removeUploadedFile(fileName)); // Removes the specific file from Redux state
+    setFileObjects((prev) => prev.filter((file) => file.name !== fileName)); // Remove from local state
   };
 
-  // Set up the dropzone for file drag-and-drop or manual upload
   const { getRootProps, getInputProps } = useDropzone({
     accept: { "text/csv": [".csv"] },
     multiple: true,
@@ -125,10 +128,7 @@ export const UploadCsvFile = () => {
 
   return (
     <ShowcaseSection title="Upload your CSV files" className="!p-7">
-      <div
-        {...getRootProps()}
-        className="relative dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary mb-5 flex flex-col items-center justify-center w-full h-40 rounded-xl border border-dashed border-gray-300 bg-gray-100 hover:border-[#5750F1] cursor-pointer p-4"
-      >
+      <div {...getRootProps()} className="relative dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary mb-5 flex flex-col items-center justify-center w-full h-40 rounded-xl border border-dashed border-gray-300 bg-gray-100 hover:border-[#5750F1] cursor-pointer p-4">
         <input {...getInputProps()} />
         <div className="flex dark:border-dark-3 dark:bg-gray-dark size-14 items-center justify-center rounded-full border border-gray-300 bg-white">
           <UploadIcon />
@@ -141,34 +141,17 @@ export const UploadCsvFile = () => {
 
       {uploadedFiles.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-          {uploadedFiles.map(({ file, uploadProgress }) => (
-            <UploadedFile
-              key={file.name}
-              message={file.name}
-              size={file.size}
-              progress={uploadProgress}
-              onClose={() => handleRemoveFile(file.name)}
-            />
+          {uploadedFiles.map(({ fileName, fileSize, uploadProgress }) => (
+            <UploadedFile key={fileName} message={fileName} size={fileSize} progress={uploadProgress} onClose={() => handleRemoveFile(fileName)} />
           ))}
         </div>
       )}
 
       <div className="flex justify-end gap-3 mt-6">
-        <button
-          type="button"
-          className="rounded-lg border border-gray-400 px-6 py-2 text-sm font-medium text-gray-800 hover:shadow dark:border-dark-3 dark:text-white"
-          onClick={handleClear}
-        >
+        <button type="button" className="rounded-lg border border-gray-400 px-6 py-2 text-sm font-medium text-gray-800 hover:shadow dark:border-dark-3 dark:text-white" onClick={handleClear}>
           Clear
         </button>
-        <button
-          type="button"
-          className={`rounded-lg px-6 py-2 text-sm font-medium text-white bg-[#5750F1] hover:bg-opacity-90 transition ${
-            uploadedFiles.length === 0 ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-          disabled={uploadedFiles.length === 0}
-          onClick={handleSave}
-        >
+        <button type="button" className={`rounded-lg px-6 py-2 text-sm font-medium text-white bg-[#5750F1] hover:bg-opacity-90 transition ${uploadedFiles.length === 0 ? "opacity-50 cursor-not-allowed" : ""}`} disabled={uploadedFiles.length === 0} onClick={handleSave}>
           Save
         </button>
       </div>

@@ -25,7 +25,13 @@ export const NAV_DATA = [
   {
     label: "OTHERS",
     items: [
-     
+      {
+        title: "Test",
+        icon: Icons.HomeIcon,
+        url: "/test",
+        items: [
+        ],
+      }
     ],
   },
 ];

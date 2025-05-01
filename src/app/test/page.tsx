@@ -7,7 +7,7 @@ import { RootState } from "@/store/Store";
 import React from 'react'
 
 const page = () => {
-    const CSVRecords = useSelector((state: RootState) => state);
+    const CSVRecords = useSelector((state: RootState) => state.csv.data);
     console.log( CSVRecords)
   return (
     <div>page</div>

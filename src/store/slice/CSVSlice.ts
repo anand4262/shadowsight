@@ -1,6 +1,6 @@
 // /src/store/slices/csvSlice.ts
 import { createSlice, PayloadAction} from "@reduxjs/toolkit";
-import { CSVState, CSVRecord } from "./CSVTypes";  
+import { CSVState, CSVRecord } from "../types/CSVTypes";  
 
 // Initial state
 const initialState: CSVState = {

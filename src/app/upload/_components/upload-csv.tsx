@@ -1,89 +1,122 @@
 "use client";
 
 import { useDropzone } from "react-dropzone";
-import {  useState } from "react";
-import { useDispatch } from 'react-redux';
-import { setCsvData, setLoading, setError, setProcessedData, resetState } from '@/store/CSVSlice'; 
-import { AppDispatch } from "@/store/Store"; // Import Redux actions
-import { processData } from "@/utils/GlobalHelpers"
-import readCSVFile from "@/utils/readCSVFile";
-import { UploadIcon } from "@/assets/icons";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/Store";
+import { addUploadedFile, updateProgress, removeFile, clearAllUploadedFiles } from "@/store/slice/uploadSlice";
+import { setCsvData, setProcessedData, setLoading, setError, resetState } from "@/store/slice/CSVSlice";
+import { processData } from "@/utils/GlobalHelpers";
 import { ShowcaseSection } from "@/components/Layouts/showcase-section";
 import UploadedFile from "@/components/UploadedFile";
+import { UploadIcon } from "@/assets/icons";
+import readCSVFile from "@/utils/readCSVFile";  // Assuming this function handles CSV parsing
 
 export const UploadCsvFile = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const uploadedFiles = useSelector((state: RootState) => state.uploads.uploadedFiles);
 
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  // File validation (CSV and size check)
+  const validateFile = (file: File): boolean => {
+    const isCSV = file.name.endsWith(".csv") && file.type === "text/csv";
+    const isValidSize = file.size <= 10 * 1024 * 1024; // 10 MB
 
-  // Handle file selection & start progress
-  const onDrop = (acceptedFiles: File[]) => {
-    const validCsvFiles = acceptedFiles.filter(
-      (file) => file.name.endsWith(".csv") && file.type === "text/csv"
-    );
-
-    if (validCsvFiles.length === 0) {
+    if (!isCSV) {
       alert("Invalid file type. Please upload CSV files only.");
-      return;
+    } else if (!isValidSize) {
+      alert("File is too large. Maximum allowed size is 10MB.");
     }
-
-    validCsvFiles.forEach((file) => simulateUpload(file));
+    return isCSV && isValidSize;
   };
 
-  const simulateUpload = (file: File) => {
-    setSelectedFiles((prev) => [...prev, file]);
-    setUploadProgress((prev) => ({ ...prev, [file.name]: 0 }));
+  // Handle the file drop (or file select via click)
+  const onDrop = (acceptedFiles: File[]) => {
+    const validCsvFiles = acceptedFiles.filter((file) => validateFile(file));
 
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 10;
-      setUploadProgress((prev) => ({ ...prev, [file.name]: progress }));
-      if (progress >= 100) {
-        clearInterval(interval);
-        setUploadedFiles((prev) => [...prev, file]);
-      }
-    }, 200);
-  };
+    if (validCsvFiles.length === 0) return;
 
-  const handleClear = () => {
-    //dispatch(resetState());
-    setSelectedFiles([]);
-    setUploadProgress({});
-    setUploadedFiles([]);
-  };
-
-  const handleSave = async () => {
-    dispatch(setLoading(true))
-    try {
-      for (const file of uploadedFiles) {
-        const parsedData = await readCSVFile(file);  // Wait for CSV to be parsed
-        dispatch(setCsvData(parsedData));  // Dispatch the parsed data to Redux store
-
-        // Optional: Process the data (e.g., aggregate counts, calculate risk score)
-        const processedData = processData(parsedData);
-        dispatch(setProcessedData(processedData));  // Store processed data in Redux
-
-        alert("Files parsed and saved!");
-      }
-    } catch (error) {
-      if (error instanceof Error) dispatch(setError(`Error parsing CSV: ${error.message}`));  // Handle errors and dispatch to Redux
-    } finally {
-      dispatch(setLoading(false));  // Set loading state to false after the operation
-    }
-  }
-
-  const handleRemoveFile = (fileName: string) => {
-    setSelectedFiles((prev) => prev.filter((file) => file.name !== fileName));
-    setUploadedFiles((prev) => prev.filter((file) => file.name !== fileName));
-    setUploadProgress((prev) => {
-      const updated = { ...prev };
-      delete updated[fileName];
-      return updated;
+    validCsvFiles.forEach((file) => {
+      // Store file metadata in Redux without parsing or simulating upload progress yet
+      dispatch(addUploadedFile({ file, uploadProgress: 0, status: "pending" }));
     });
   };
 
+  // Simulate file upload progress (or actual file upload if needed)
+  const simulateUpload = (file: File) => {
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 10;
+      dispatch(updateProgress({ fileName: file.name, progress }));
+
+      if (progress >= 100) {
+        clearInterval(interval); // Stop progress simulation when 100% is reached
+        dispatch(updateProgress({ fileName: file.name, progress: 100 }));
+      }
+    }, 200); // Adjust the speed of progress simulation as needed
+  };
+
+  // Parse CSV data after upload completes (on Save button click)
+  const parseCSVFile = (file: File) => {
+    return new Promise<void>((resolve, reject) => {
+      readCSVFile(file)
+        .then((parsedData) => {
+          dispatch(setCsvData(parsedData)); // Store parsed CSV data in Redux
+          const processedData = processData(parsedData); // Process parsed data if necessary
+          dispatch(setProcessedData(processedData)); // Store processed data in Redux
+          resolve();
+        })
+        .catch((error) => {
+          dispatch(setError("Error during CSV parsing: " + error.message));
+          reject(error);
+        });
+    });
+  };
+
+  // Handle Save: Parse CSV and process data when the user clicks Save
+  const handleSave = () => {
+    dispatch(setLoading(true));
+
+    // Loop through the uploaded files and trigger parsing only when the upload is complete
+    const uploadPromises = uploadedFiles.map((uploaded) => {
+      const file = uploaded.file;
+
+      // Simulate the file upload progress (or use actual upload API logic)
+      simulateUpload(file);
+
+      // Return a Promise that resolves once the file is fully uploaded and parsed
+      return new Promise<void>((resolve, reject) => {
+        if (uploaded.uploadProgress === 100) {
+          parseCSVFile(file)
+            .then(() => resolve()) // Parsing is done, resolve the promise
+            .catch((error) => reject(error)); // If parsing fails, reject the promise
+        } else {
+          reject("Upload not completed");
+        }
+      });
+    });
+
+    // Once all files are processed, handle the final state change
+    Promise.all(uploadPromises)
+      .then(() => {
+        dispatch(setLoading(false));  // End loading state after process finishes
+      })
+      .catch((error) => {
+        dispatch(setError(error)); // Handle errors during parsing
+        dispatch(setLoading(false));  // End loading state on error
+      });
+  };
+
+  // Handle Clear: Reset all uploaded files and parsed data
+  const handleClear = () => {
+    dispatch(clearAllUploadedFiles()); // Clears the uploaded files from Redux
+    dispatch(resetState()); // Reset other data like processed data
+  };
+
+  // Handle File Removal: Remove individual files from Redux state
+  const handleRemoveFile = (fileName: string) => {
+    dispatch(removeFile(fileName)); // Removes the specific file from Redux state
+  };
+
+  // Set up the dropzone for file drag-and-drop or manual upload
   const { getRootProps, getInputProps } = useDropzone({
     accept: { "text/csv": [".csv"] },
     multiple: true,
@@ -103,17 +136,17 @@ export const UploadCsvFile = () => {
         <p className="mt-2 text-sm font-medium">
           <span className="text-[#5750F1]">Click to upload</span> or drag & drop CSV files
         </p>
-        <p className="text-xs text-gray-500 mt-1">Only .csv files are accepted. Multiple supported.</p>
+        <p className="text-xs text-gray-500 mt-1">Only .csv files are accepted. Maximum 5 files, each up to 10MB.</p>
       </div>
 
-      {selectedFiles.length > 0 && (
+      {uploadedFiles.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-          {selectedFiles.map((file) => (
+          {uploadedFiles.map(({ file, uploadProgress }) => (
             <UploadedFile
               key={file.name}
               message={file.name}
               size={file.size}
-              progress={uploadProgress[file.name] || 0}
+              progress={uploadProgress}
               onClose={() => handleRemoveFile(file.name)}
             />
           ))}

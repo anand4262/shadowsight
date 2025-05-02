@@ -26,7 +26,7 @@ export const NAV_DATA = [
     label: "OTHERS",
     items: [
       {
-        title: "Test",
+        title: "Dashboard V1",
         icon: Icons.HomeIcon,
         url: "/test",
         items: [

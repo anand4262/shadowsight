@@ -6,3 +6,72 @@ export const processData = (data: any[]) => {
   
     return processed;
   };
+
+
+ // utils/GlobalHelpers.ts
+
+ export const getEmailDomainData = (uploadedFiles: any[]) => {
+  const emailDomainCounts: { [key: string]: number } = {};
+
+  uploadedFiles.forEach((file) => {
+    const values = JSON.parse(file.values)
+    const destinations = values?.destinations;
+    if (Array.isArray(destinations)) {
+      destinations.forEach((email: string) => {
+        const domain = email.split('@')[1]; // Extract domain from email
+
+        if (domain) {
+          emailDomainCounts[domain] = (emailDomainCounts[domain] || 0) + 1;
+        }
+      });
+    }
+  });
+
+  return Object.keys(emailDomainCounts).map((domain) => ({
+    domain,
+    count: emailDomainCounts[domain],
+  }));
+};
+
+export const getActivityDataByDate = (uploadedFiles: any[]) => {
+  const dateCounts: { [key: string]: { emailCount: number; usbCount: number; cloudCount: number } } = {};
+
+  uploadedFiles.forEach((file) => {
+    let { date, integration } = file;
+    date = new Date(date);
+
+ date = new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(date);
+
+    if (!date) return;
+
+    if (!dateCounts[date]) {
+      dateCounts[date] = {
+        emailCount: 0,
+        usbCount: 0,
+        cloudCount: 0,
+      };
+    }
+    if (integration === "si-email") {
+      dateCounts[date].emailCount++;
+    } else if (integration === "si-usb") {
+      dateCounts[date].usbCount++;
+    } else if (integration === "si-cloud") {
+      dateCounts[date].cloudCount++;
+    }
+  });
+
+  return Object.keys(dateCounts).map((date) => ({
+    date,
+    emailCount: dateCounts[date].emailCount,
+    usbCount: dateCounts[date].usbCount,
+    cloudCount: dateCounts[date].cloudCount,
+  }));
+};
+
+
+  
+

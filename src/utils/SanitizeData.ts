@@ -1,30 +1,7 @@
 
 import {CSVRecord} from "@/store/types/CSVTypes"
 
-/* interface PoliciesBreached {
-    dataLeakage?: string[];
-    pii?: string[];
-    sensitive?: string[];
-  }
-  
-  interface Values {
-    destinations?: string[];
-    cloudProvider?: string;
-  }
-  
-  interface CSVRecord {
-    activityId: string;
-    user: string;
-    date: string;
-    time: string;
-    riskScore: number;
-    integration: string;
-    policiesBreached: PoliciesBreached;
-    values: Values;
-    status: string;
-    managerAction: string;
-    dataVolumeMB: number;  
-  } */
+
     interface ExtendedCSVRecord extends CSVRecord {
       dataVolumeMB: number; 
     }

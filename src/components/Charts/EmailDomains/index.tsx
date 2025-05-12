@@ -10,7 +10,11 @@ import type { ApexOptions } from "apexcharts";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
-export function EmailDomainChart() {
+type PropsType = {
+  className?: string;
+};
+
+export function EmailDomainChart({className}: PropsType) {
     const [formattedData, setFormattedData] = useState<{
         domains: string[]; // Array of domain strings
         activityCounts: number[]; // Array of activity counts (numbers)
@@ -87,7 +91,7 @@ export function EmailDomainChart() {
   };
 
   return (
-    <div className={cn("rounded-[10px] bg-white px-7.5 pb-6 pt-7.5 shadow-1 dark:bg-gray-dark dark:shadow-card")}>
+    <div className={cn("rounded-[10px] bg-white px-7.5 pb-6 pt-7.5 shadow-1 dark:bg-gray-dark dark:shadow-card", className)}>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-body-2xlg font-bold text-dark dark:text-white">Email Domains Activity</h2>
       </div>

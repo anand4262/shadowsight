@@ -2,8 +2,8 @@
 
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/Store";
-import { addUploadedFile, updateProgress, removeUploadedFile, clearAllUploadedFiles } from "@/store/slice/uploadSlice";
-import { setCsvData, setProcessedData, setLoading, setError, resetState } from "@/store/slice/CSVSlice";
+import { addUploadedFile, updateProgress, removeUploadedFile, clearAllUploadedFiles } from "@/store/slices/uploadSlice";
+import { setCsvData, setProcessedData, setLoading, setError, resetState } from "@/store/slices/CSVSlice";
 import { processData } from "@/utils/GlobalHelpers";
 import { ShowcaseSection } from "@/components/Layouts/showcase-section";
 import UploadedFile from "@/components/UploadedFile";

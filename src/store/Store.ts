@@ -1,12 +1,14 @@
 // store/index.ts
 import { configureStore } from '@reduxjs/toolkit';
-import CSVReducer from './slice/CSVSlice';
-import uploadReducer from '@/store/slice/uploadSlice'
+import CSVReducer from './slices/CSVSlice';
+import uploadReducer from '@/store/slices/uploadSlice'
+import GraphComponentSlice from "@/store/slices/GraphComponentSlice"
 
 const store = configureStore({
   reducer: {
     csv: CSVReducer, 
-    uploads: uploadReducer
+    uploads: uploadReducer,
+    selected: GraphComponentSlice
   },
 });
 

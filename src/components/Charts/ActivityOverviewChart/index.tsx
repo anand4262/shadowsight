@@ -6,11 +6,15 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { getActivityDataByDate } from "@/utils/GlobalHelpers"; // New helper function for processing activity data
 import { ApexOptions } from "apexcharts";
+import { cn } from "@/lib/utils";
 
 // Dynamically import the ApexChart component to prevent SSR issues
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
+type PropsType = {
+  className?: string;
+};
 
-export function ActivityOverviewChart() {
+export function ActivityOverviewChart({className}: PropsType) {
   const uploadedFiles = useSelector((state: RootState) => state.csv.data); // Get uploaded files from Redux
   const [formattedData, setFormattedData] = useState<{
     dates: string[];
@@ -88,7 +92,7 @@ export function ActivityOverviewChart() {
   };
 
   return (
-    <div className="rounded-[10px] bg-white px-7.5 pb-6 pt-7.5 shadow-1 dark:bg-gray-dark dark:shadow-card">
+    <div className={cn('rounded-[10px] bg-white px-7.5 pb-6 pt-7.5 shadow-1 dark:bg-gray-dark dark:shadow-card', className)}>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-body-2xlg font-bold text-dark dark:text-white">Activity Overview</h2>
       </div>

@@ -75,3 +75,36 @@ export const getActivityDataByDate = (uploadedFiles: any[]) => {
 
   
 
+export const getActivityCountByRiskRange = (
+  data: { activityId: string; riskScore: number }[],
+  customRanges: number[] = [0, 500, 1000, 1500, 2000, 2500, 3000]
+) => {
+  const labels = customRanges.slice(1).map((end, i) => `${customRanges[i]}–${end}`);
+  const counts = new Array(labels.length).fill(0);
+  const bins: Set<string>[] = counts.map(() => new Set());
+
+  for (const row of data) {
+    const score = row.riskScore;
+    const id = row.activityId;
+
+    // Proper inclusive binning
+    const idx = customRanges.findIndex(
+      (start, i) =>
+        i < customRanges.length - 1 &&
+        score >= start &&
+        score <= customRanges[i + 1]
+    );
+
+    if (idx !== -1) {
+      bins[idx].add(id);
+    }
+  }
+
+  const finalCounts = bins.map(set => set.size);
+
+  return {
+    categories: labels,
+    seriesData: finalCounts
+  };
+};
+

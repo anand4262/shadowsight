@@ -52,7 +52,16 @@ const RiskScoreBarChart: React.FC<PropsType> = ({ className }) => {
     xaxis: {
       categories,
       title: { text: 'Risk Score Range', style: { fontSize: '14px' } },
-      labels: { rotate: -45 }
+      axisBorder: {
+        show: false,
+      },
+      axisTicks: {
+        show: false,
+      },
+      /* labels: { 
+      rotate: -45,
+      trim: false,
+      } */
     },
     yaxis: {
       title: { text: 'Unique Activity Count', style: { fontSize: '14px' } }

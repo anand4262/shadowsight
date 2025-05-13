@@ -4,6 +4,7 @@ import { OverviewCardsSkeleton } from "./_components/overview-cards/skeleton";
 import {EmailDomainChart} from "@/components/Charts/EmailDomains"
 import { ActivityOverviewChart } from '@/components/Charts/ActivityOverviewChart';
 import RiskScoreBarChart from "@/components/Charts/RiskDistribution"
+import DataLeakageByDate from "@/components/Charts/DataLeakageByDate"
 import MultiSelect from "@/components/MultiSelect"
 
 type PropsType = {
@@ -30,6 +31,7 @@ export default async function Home({ searchParams }: PropsType) {
       <EmailDomainChart className="col-span-12 xl:col-span-6" />
       <RiskScoreBarChart  className="col-span-12 xl:col-span-6"/>
       <ActivityOverviewChart   className="col-span-12 xl:col-span-6"/>
+      <DataLeakageByDate className="col-span-12 xl:col-span-6"/>
         <div className="col-span-12 grid xl:col-span-8">
           
         </div>

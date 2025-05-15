@@ -18,17 +18,28 @@ const DataLeakageByDate: React.FC<PropsType> = ({ className }) => {
   const uploadedFiles = useSelector((state: RootState) => state.csv.data) as CSVRecord[];
   const safeData = Array.isArray(uploadedFiles) ? uploadedFiles : [];
 
-  const [range, setRange] = useState<'7' | '30' | 'all'>('7');
+  const [pageIndex, setPageIndex] = useState(0);
+
+  const allDates = useMemo(() => {
+    const dates = Array.from(new Set(
+      safeData
+        .map(row => new Date(row.date))
+        .filter(d => !isNaN(d.getTime()))
+        .map(d => d.toISOString().split('T')[0])
+    ));
+    return dates.sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+  }, [safeData]);
+
+  const pagedDates = useMemo(() => {
+    return allDates.slice(pageIndex * 5, (pageIndex + 1) * 5);
+  }, [allDates, pageIndex]);
 
   const filteredData = useMemo(() => {
-    if (range === 'all') return safeData;
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - parseInt(range));
-    return safeData.filter((row) => {
-      const date = new Date(row.date);
-      return !isNaN(date.getTime()) && date >= cutoff;
+    return safeData.filter(row => {
+      const date = new Date(row.date).toISOString().split('T')[0];
+      return pagedDates.includes(date);
     });
-  }, [safeData, range]);
+  }, [safeData, pagedDates]);
 
   const { categories, seriesData } = useMemo(() => {
     if (filteredData.length === 0) {
@@ -97,15 +108,22 @@ const DataLeakageByDate: React.FC<PropsType> = ({ className }) => {
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
             Data Leakage by Date
           </h3>
-          <select
-            value={range}
-            onChange={(e) => setRange(e.target.value as '7' | '30' | 'all')}
-            className="text-sm border border-gray-300 rounded px-2 py-1 dark:bg-gray-700 dark:text-white"
-          >
-            <option value="7">Last 7 Days</option>
-            <option value="30">Last 30 Days</option>
-            <option value="all">All Time</option>
-          </select>
+          <div className="flex gap-2">
+            <button
+              disabled={pageIndex === 0}
+              onClick={() => setPageIndex(prev => prev - 1)}
+              className="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 dark:bg-gray-700 dark:text-white"
+            >
+              Prev
+            </button>
+            <button
+              disabled={(pageIndex + 1) * 5 >= allDates.length}
+              onClick={() => setPageIndex(prev => prev + 1)}
+              className="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 dark:bg-gray-700 dark:text-white"
+            >
+              Next
+            </button>
+          </div>
         </div>
         <Suspense fallback={<ChartSkeleton />}>
           <ApexChart

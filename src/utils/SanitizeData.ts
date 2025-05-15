@@ -17,7 +17,8 @@ import {CSVRecord} from "@/store/types/CSVTypes"
       const cleanedData = await Promise.all(data.map(async (record: ExtendedCSVRecord) => {
         // Calculate risk score first (you only calculate once)
         const calculatedRiskScore = calculateRiskScore(record);
-  
+        const rowPolicyData = (typeof record.policiesBreached === 'string')? JSON.parse(record.policiesBreached): record.policiesBreached;
+        const rawValues = (typeof record.values === 'string')? JSON.parse(record.values): record.values;
         return {
           ...record,
           // Trimming whitespace from string fields
@@ -26,8 +27,8 @@ import {CSVRecord} from "@/store/types/CSVTypes"
           date: formatDate(record.date),
           time: (record.time || '').trim(),
           // Filling missing values
-          policiesBreached: record.policiesBreached || {},
-          values: record.values || {},
+          policiesBreached: rowPolicyData || {},
+          values: rawValues|| {},
           managerAction: record.managerAction || 'Unknown',
           // Validating numeric fields
           riskScore: await validateNumber(calculatedRiskScore),  
@@ -36,6 +37,7 @@ import {CSVRecord} from "@/store/types/CSVTypes"
       }));
   
       // Return the cleaned data once processing is complete
+      console.log(cleanedData)
       return cleanedData;
     } catch (error: unknown) {
         // Ensure that error is an instance of Error before accessing .message

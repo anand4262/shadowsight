@@ -5,8 +5,10 @@ import {EmailDomainChart} from "@/components/Charts/EmailDomains"
 import { ActivityOverviewChart } from '@/components/Charts/ActivityOverviewChart';
 import RiskScoreBarChart from "@/components/Charts/RiskDistribution"
 import DataLeakageByDate from "@/components/Charts/DataLeakageByDate"
+import ManagerOutcomeDistribution from "@/components/Charts/ManagerOutcomeDistribution"
+import ActivityByHourChart from "@/components/Charts/ActivityByHourChart"
 import MultiSelect from "@/components/MultiSelect"
-
+import DataLeakageByUserFiltered from "@/components/Charts/DataLeakageByUserFiltered"
 type PropsType = {
   searchParams: Promise<{
     selected_time_frame?: string;
@@ -32,6 +34,9 @@ export default async function Home({ searchParams }: PropsType) {
       <RiskScoreBarChart  className="col-span-12 xl:col-span-6"/>
       <ActivityOverviewChart   className="col-span-12 xl:col-span-6"/>
       <DataLeakageByDate className="col-span-12 xl:col-span-6"/>
+      <ManagerOutcomeDistribution className="col-span-12 xl:col-span-6"/>
+      <ActivityByHourChart className="col-span-12 xl:col-span-6"/>
+      <DataLeakageByUserFiltered className="col-span-12 xl:col-span-6"/>
         <div className="col-span-12 grid xl:col-span-8">
           
         </div>

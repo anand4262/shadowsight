@@ -14,8 +14,7 @@ export const processData = (data: any[]) => {
   const emailDomainCounts: { [key: string]: number } = {};
 
   uploadedFiles.forEach((file) => {
-    const values = JSON.parse(file.values)
-    const destinations = values?.destinations;
+    const destinations = file.values?.destinations;
     if (Array.isArray(destinations)) {
       destinations.forEach((email: string) => {
         const domain = email.split('@')[1]; // Extract domain from email
@@ -130,7 +129,7 @@ export const getActivityCountByRiskRange = (
   return { categories, seriesData };
 }; */
 
-export const getDataLeakageByDate = (
+/* export const getDataLeakageByDate = (
   data: any[]
 ): { categories: string[]; seriesData: number[] } => {
   const counts: Record<string, number> = {};
@@ -170,5 +169,145 @@ export const getDataLeakageByDate = (
   const seriesData = categories.map((date) => counts[date]);
 
   return { categories, seriesData };
+}; */
+
+export const getDataLeakageByDate = (
+  data: any[]
+): { categories: string[]; seriesData: number[] } => {
+  const counts: Record<string, number> = {};
+
+  for (const row of data) {
+    try {
+      const breaches = row.policiesBreached?.dataLeakage;
+
+      if (Array.isArray(breaches) && breaches.length > 0) {
+        const rawDate = row.date;
+        const dateObj = new Date(rawDate);
+
+        if (!rawDate || isNaN(dateObj.getTime())) continue;
+
+        // Format as dd/mm/yyyy
+        const formattedDate = `${String(dateObj.getDate()).padStart(2, '0')}/${String(
+          dateObj.getMonth() + 1
+        ).padStart(2, '0')}/${dateObj.getFullYear()}`;
+
+        counts[formattedDate] = (counts[formattedDate] || 0) + 1;
+      }
+    } catch (err) {
+      console.warn('Invalid JSON in policiesBreached:', row.policiesBreached);
+      continue;
+    }
+  }
+
+  const categories = Object.keys(counts).sort((a, b) => {
+    const [ad, am, ay] = a.split('/').map(Number);
+    const [bd, bm, by] = b.split('/').map(Number);
+    return new Date(ay, am - 1, ad).getTime() - new Date(by, bm - 1, bd).getTime();
+  });
+
+  const seriesData = categories.map(date => counts[date]);
+
+  return { categories, seriesData };
 };
 
+
+export const getManagerOutcomeDistribution = (data: any[]) => {
+  const counts: Record<string, number> = {
+    knownGoodActivity: 0,
+    employeeCounselled: 0,
+    escalated: 0,
+    unknown: 0,
+  };
+
+  for (const row of data) {
+    const action = typeof row.managerAction === 'string'
+      ? row.managerAction.trim().toLowerCase()
+      : '';
+
+    switch (action) {
+      case 'knowngoodactivity':
+        counts.knownGoodActivity++;
+        break;
+      case 'employeecounselled':
+        counts.employeeCounselled++;
+        break;
+      case 'escalated':
+        counts.escalated++;
+        break;
+      default:
+        counts.unknown++;
+        break;
+    }
+  }
+
+  const labels = [
+    'Known Good Activity',
+    'Employee Counselled',
+    'Escalated',
+    'Unknown'
+  ];
+
+  const series = [
+    counts.knownGoodActivity,
+    counts.employeeCounselled,
+    counts.escalated,
+    counts.unknown
+  ];
+
+  return { labels, series };
+};
+
+export const getTimeOfDayDistribution = (data: any[]) => {
+  const counts = new Array(24).fill(0);
+
+  for (const row of data) {
+    const timeStr = row.time;
+    if (!timeStr) continue;
+
+    const [hourStr] = timeStr.split(':');
+    const hour = parseInt(hourStr, 10);
+
+    if (!isNaN(hour) && hour >= 0 && hour <= 23) {
+      counts[hour]++;
+    }
+  }
+
+  const labels = Array.from({ length: 24 }, (_, i) => {
+    const hour12 = i % 12 === 0 ? 12 : i % 12;
+    const suffix = i < 12 ? 'AM' : 'PM';
+    return `${hour12} ${suffix}`;
+  });
+
+  return {
+    labels,       // Use in chart x-axis
+    series: counts // Use as data
+  };
+};
+
+export const getDataLeakageByUserFiltered = (data: any[]) => {
+  const counts: Record<string, number> = {};
+
+  for (const row of data) {
+    const user = row.user;
+    const policy = row.policiesBreached;
+
+    const isLeaked =
+      policy?.dataLeakage &&
+      Array.isArray(policy.dataLeakage) &&
+      policy.dataLeakage.length > 0;
+
+    if (user && isLeaked) {
+      counts[user] = (counts[user] || 0) + 1;
+    }
+  }
+
+  // Filter users with >10 incidents
+  const filtered = Object.entries(counts)
+    .filter(([_, count]) => count > 3)
+    .sort((a, b) => b[1] - a[1]); // Sort descending
+
+  const labels = filtered.map(([user]) => user);
+  const series = filtered.map(([_, count]) => count);
+
+  return { labels, series };
+};

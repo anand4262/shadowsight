@@ -32,7 +32,20 @@ const RiskScoreBarChart: React.FC<PropsType> = ({ className }) => {
       type: 'bar',
       height: 350,
       toolbar: { show: false },
-      fontFamily: 'inherit'
+      fontFamily: 'inherit',
+      animations: {
+        enabled: true,
+        speed: 800,
+        easing: 'easeinout', // this causes TS error
+        animateGradually: {
+          enabled: true,
+          delay: 150,
+        },
+        dynamicAnimation: {
+          enabled: true,
+          speed: 350,
+        },
+      } as any,
     },
     colors: ["#5750F1"],
     plotOptions: {

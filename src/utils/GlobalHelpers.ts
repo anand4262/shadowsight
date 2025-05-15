@@ -311,3 +311,42 @@ export const getDataLeakageByUserFiltered = (data: any[]) => {
 
   return { labels, series };
 };
+
+export const getHighRiskPolicyMatrix = (data: any[]) => {
+  const result: Record<string, { enhanced: number; pip: number; productivity: number }> = {};
+
+  for (const row of data) {
+    const user = row.user;
+    const riskScore = row.riskScore;
+
+    if (!user || riskScore < 1000) continue;
+
+    // Handle stringified JSON or object
+    let policy: any = {};
+    try {
+      policy = typeof row.policiesBreached === 'string'
+        ? JSON.parse(row.policiesBreached)
+        : row.policiesBreached;
+    } catch (e) {
+      continue; // skip if invalid
+    }
+
+    const enhanced = Array.isArray(policy.EnhancedMonitoring) ? policy.EnhancedMonitoring.length : 0;
+    const pip = Array.isArray(policy.PerformanceImprovementPlan) ? policy.PerformanceImprovementPlan.length : 0;
+    const productivity = Array.isArray(policy.ProductivityMonitored) ? policy.ProductivityMonitored.length : 0;
+
+    if (!result[user]) {
+      result[user] = { enhanced, pip, productivity };
+    } else {
+      result[user].enhanced += enhanced;
+      result[user].pip += pip;
+      result[user].productivity += productivity;
+    }
+  }
+
+  return Object.entries(result).map(([user, values]) => ({
+    user,
+    ...values,
+  }));
+};
+

@@ -42,6 +42,19 @@ export function EmailDomainChart({className}: PropsType) {
         show: false,
       },
       fontFamily: "inherit",
+      animations: {
+        enabled: true,
+        speed: 800,
+        easing: 'easeinout', // this causes TS error
+        animateGradually: {
+          enabled: true,
+          delay: 150,
+        },
+        dynamicAnimation: {
+          enabled: true,
+          speed: 350,
+        },
+      } as any, 
     },
     colors: ["#5750F1"], // Set the bar color to your preference
     plotOptions: {
@@ -89,7 +102,7 @@ export function EmailDomainChart({className}: PropsType) {
       },
     },
   };
-
+console.log(className)
   return (
     <div className={cn("rounded-[10px] bg-white px-7.5 pb-6 pt-7.5 shadow-1 dark:bg-gray-dark dark:shadow-card", className)}>
       <div className="flex flex-wrap items-center justify-between gap-4">

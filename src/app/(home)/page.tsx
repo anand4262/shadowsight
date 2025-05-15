@@ -9,18 +9,32 @@ import ManagerOutcomeDistribution from "@/components/Charts/ManagerOutcomeDistri
 import ActivityByHourChart from "@/components/Charts/ActivityByHourChart"
 import MultiSelect from "@/components/MultiSelect"
 import DataLeakageByUserFiltered from "@/components/Charts/DataLeakageByUserFiltered"
+import HighRiskEmployeeChart from "@/components/Charts/HighRiskEmployeeChart"
+import { motion } from 'framer-motion';
+import { useSelector } from 'react-redux'; 
+import { RootState } from '@/store/Store';
 type PropsType = {
   searchParams: Promise<{
     selected_time_frame?: string;
   }>;
 };
 
+export const chartComponentMap: Record<string, React.FC<{ /* data: CSVRecord[]; */ [key: string]: any }>> = {
+  emailDomainActivity: EmailDomainChart,
+  activityCountByRiskScore: RiskScoreBarChart,
+  activityOverview: ActivityOverviewChart,
+  dataLeakageByDate: DataLeakageByDate,
+  managerOutcomeSummary: ManagerOutcomeDistribution,
+  activityCountByHour: ActivityByHourChart,
+  dataLeakageByUser: DataLeakageByUserFiltered,
+};
 
-export default async function Home({ searchParams }: PropsType) {
-  const { selected_time_frame } = await searchParams;
+
+export default  function Home({ searchParams }: PropsType) {
   //const extractTimeFrame = createTimeFrameExtractor(selected_time_frame);
   //const CSVRecords = useSelector((state: RootState) => state.csv.data);
-  //const uploadedFiles = useSelector((state: RootState) => state.csv.data);
+  const selected = useSelector((state: RootState) => state.selected.selected);
+  console.log(selected)
   return (
     <>
       <Suspense fallback={<OverviewCardsSkeleton />}>
@@ -29,14 +43,33 @@ export default async function Home({ searchParams }: PropsType) {
         <MultiSelect />
       </Suspense>
       <div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-9 2xl:gap-7.5">
-        
-      <EmailDomainChart className="col-span-12 xl:col-span-6" />
+     
+        {selected.map((select) => {
+          const ChartComponent = chartComponentMap[select.value];
+          return ChartComponent ? (
+            <motion.div
+            key={select.value}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.4 }}
+            className="col-span-12 xl:col-span-6"
+          >
+              <ChartComponent   />
+          </motion.div>
+              
+          ) : <div className="col-span-12">Nothing is selected</div>;
+        })}
+     
+
+      {/* <EmailDomainChart className="col-span-12 xl:col-span-6" />
       <RiskScoreBarChart  className="col-span-12 xl:col-span-6"/>
       <ActivityOverviewChart   className="col-span-12 xl:col-span-6"/>
       <DataLeakageByDate className="col-span-12 xl:col-span-6"/>
       <ManagerOutcomeDistribution className="col-span-12 xl:col-span-6"/>
       <ActivityByHourChart className="col-span-12 xl:col-span-6"/>
-      <DataLeakageByUserFiltered className="col-span-12 xl:col-span-6"/>
+      <DataLeakageByUserFiltered className="col-span-12 xl:col-span-6"/> */}
+      <HighRiskEmployeeChart />
         <div className="col-span-12 grid xl:col-span-8">
           
         </div>

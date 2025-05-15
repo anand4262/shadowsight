@@ -29,6 +29,19 @@ const ManagerOutcomeDistribution: React.FC<PropsType> = ({ className }) => {
     chart: {
       type: 'pie',
       toolbar: { show: false },
+      animations: {
+        enabled: true,
+        speed: 800,
+        easing: 'easeinout', // this causes TS error
+        animateGradually: {
+          enabled: true,
+          delay: 150,
+        },
+        dynamicAnimation: {
+          enabled: true,
+          speed: 350,
+        },
+      } as any,
     },
     labels,
     legend: {

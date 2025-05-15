@@ -24,8 +24,6 @@ const MultiSelect = () => {
         dispatch(setSelectedPermissions(defaultSelect));
       }, [dispatch]);
 
-      console.log("default", defaultSelect)
-      console.log("state", options)
   return (
     <Select
               placeholder="Please select the graphs"

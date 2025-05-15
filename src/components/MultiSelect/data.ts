@@ -1,16 +1,31 @@
 export type SelectOption = {
-    value: string;
-    label: string;
-  };
+  value: string;
+  label: string;
+};
 
 export const options: SelectOption[] = [
-    { value: 'top-users', label: 'Top Users by Risk Score or Volume' },
-    { value: 'activity-over-time', label: 'User Activity Over Time' },
-    { value: 'time-vs-type', label: 'Time vs. Activity Type' },
-    { value: 'summary-kpi', label: 'Summary Statistics' }
-  ];
-  
-  export const defaultSelected: SelectOption[] = [
-    { value: 'top-users', label: 'Top Users by Risk Score or Volume' },
-    { value: 'activity-over-time', label: 'User Activity Over Time' }
-  ];
+ 
+
+  {value: 'emailDomainActivity', label: 'Email Domain Activity'},
+  {value: 'activityCountByRiskScore', label: 'Activity Count by Risk Score'},
+  { value: 'activityOverview', label: 'Activity Overview' },
+  { value: 'dataLeakageByDate', label: 'Data Leakage by Date' },
+  { value: 'managerOutcomeSummary', label: 'Manager Outcome Summary' },
+  { value: 'activityCountByHour', label: 'Activity Count by Hour' },
+  { value: 'dataLeakageByUser', label: 'Data Leakage by User' },
+  /* ,
+  { value: 'summary-kpi', label: 'Summary Statistics' },
+  { value: 'summary-kpi', label: 'Summary Statistics' },
+  { value: 'summary-kpi', label: 'Summary Statistics' },
+  { value: 'summary-kpi', label: 'Summary Statistics' },
+  { value: 'summary-kpi', label: 'Summary Statistics' }, */
+
+];
+
+
+export const defaultSelected: SelectOption[] = [
+  { value: 'dataLeakageByDate', label: 'Data Leakage by Date' },
+  { value: 'managerOutcomeSummary', label: 'Manager Outcome Summary' },
+  { value: 'activityCountByHour', label: 'Activity Count by Hour' },
+  { value: 'dataLeakageByUser', label: 'Data Leakage by User' },
+];

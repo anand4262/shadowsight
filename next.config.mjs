@@ -1,5 +1,7 @@
 /** @type {import("next").NextConfig} */
 const nextConfig = {
+  basePath: '/shadowsight', // important!
+  assetPrefix: '/shadowsight/', // important!
   images: {
     domains: ["localhost"],
     remotePatterns: [

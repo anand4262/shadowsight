@@ -3,7 +3,7 @@ const nextConfig = {
   output: 'export',
   basePath: '/shadowsight', // important!
   assetPrefix: '/shadowsight/', // important!
-  images: {
+  /* images: {
     domains: ["localhost"],
     remotePatterns: [
       {
@@ -27,7 +27,10 @@ const nextConfig = {
         port: ""
       }
     ]
-  }
+  } */
+    images: {
+      unoptimized: true,
+    },
 };
 
 export default nextConfig;

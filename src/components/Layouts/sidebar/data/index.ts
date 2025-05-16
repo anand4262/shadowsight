@@ -22,16 +22,10 @@ export const NAV_DATA = [
       },
     ],
   },
-  {
+  /* {
     label: "OTHERS",
     items: [
-      {
-        title: "Dashboard V1",
-        icon: Icons.HomeIcon,
-        url: "/test",
-        items: [
-        ],
-      }
+      
     ],
-  },
+  }, */
 ];

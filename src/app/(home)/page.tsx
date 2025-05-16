@@ -1,5 +1,5 @@
 "use client"
-import { Suspense} from "react";
+import { Suspense, useRef} from "react";
 import { OverviewCardsSkeleton } from "./_components/overview-cards/skeleton";
 import {EmailDomainChart} from "@/components/Charts/EmailDomains"
 import { ActivityOverviewChart } from '@/components/Charts/ActivityOverviewChart';
@@ -10,9 +10,13 @@ import ActivityByHourChart from "@/components/Charts/ActivityByHourChart"
 import MultiSelect from "@/components/MultiSelect"
 import DataLeakageByUserFiltered from "@/components/Charts/DataLeakageByUserFiltered"
 import HighRiskEmployeeChart from "@/components/Charts/HighRiskEmployeeChart"
+import SensitiveDataBreachSummaryChart from "@/components/Charts/SensitiveDataBreachSummary"
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux'; 
 import { RootState } from '@/store/Store';
+import DownloadJSONButton from "@/components/DownloadJSONButton"
+import DownloadImageButton from "@/components/DownloadImageButton"
+
 type PropsType = {
   searchParams: Promise<{
     selected_time_frame?: string;
@@ -27,6 +31,7 @@ export const chartComponentMap: Record<string, React.FC<{ /* data: CSVRecord[]; 
   managerOutcomeSummary: ManagerOutcomeDistribution,
   activityCountByHour: ActivityByHourChart,
   dataLeakageByUser: DataLeakageByUserFiltered,
+  sensitiveDataBreachSummary: SensitiveDataBreachSummaryChart
 };
 
 
@@ -35,14 +40,21 @@ export default  function Home({ searchParams }: PropsType) {
   //const CSVRecords = useSelector((state: RootState) => state.csv.data);
   const selected = useSelector((state: RootState) => state.selected.selected);
   console.log(selected)
+  const dashboardRef = useRef<HTMLDivElement | null>(null);
   return (
     <>
       <Suspense fallback={<OverviewCardsSkeleton />}>
         {/* <OverviewCardsGroup /> */}
-        <h4 className="{text-heading-5 font-bold text-dark dark:text-white}">Select Graphs</h4>
-        <MultiSelect />
+       
       </Suspense>
-      <div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-9 2xl:gap-7.5">
+      <div className="flex justify-end gap-4">
+        <DownloadJSONButton />
+        <DownloadImageButton targetRef={dashboardRef} />
+      </div>
+      <h4 className="{text-heading-5 font-bold text-dark dark:text-white}">Select Graphs</h4>
+      <MultiSelect />
+      
+      <div ref={dashboardRef} className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-9 2xl:gap-7.5">
      
         {selected.map((select) => {
           const ChartComponent = chartComponentMap[select.value];
@@ -69,7 +81,7 @@ export default  function Home({ searchParams }: PropsType) {
       <ManagerOutcomeDistribution className="col-span-12 xl:col-span-6"/>
       <ActivityByHourChart className="col-span-12 xl:col-span-6"/>
       <DataLeakageByUserFiltered className="col-span-12 xl:col-span-6"/> */}
-      <HighRiskEmployeeChart />
+      {/* <HighRiskEmployeeChart /> */}
         <div className="col-span-12 grid xl:col-span-8">
           
         </div>

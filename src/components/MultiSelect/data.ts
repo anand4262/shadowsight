@@ -13,6 +13,8 @@ export const options: SelectOption[] = [
   { value: 'managerOutcomeSummary', label: 'Manager Outcome Summary' },
   { value: 'activityCountByHour', label: 'Activity Count by Hour' },
   { value: 'dataLeakageByUser', label: 'Data Leakage by User' },
+  { value: 'sensitiveDataBreachSummary', label: 'PII / PHI / PCI Breaches' }
+  
   /* ,
   { value: 'summary-kpi', label: 'Summary Statistics' },
   { value: 'summary-kpi', label: 'Summary Statistics' },

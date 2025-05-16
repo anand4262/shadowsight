@@ -350,3 +350,27 @@ export const getHighRiskPolicyMatrix = (data: any[]) => {
   }));
 };
 
+export const getSensitiveDataBreachSummary = (data: any[]) => {
+  let piiCount = 0;
+  let phiCount = 0;
+  let pciCount = 0;
+
+  for (const row of data) {
+    const policies = row.policiesBreached;
+
+    if (policies?.pii && Array.isArray(policies.pii) && policies.pii.length > 0) {
+      piiCount++;
+    }
+    if (policies?.phi && Array.isArray(policies.phi) && policies.phi.length > 0) {
+      phiCount++;
+    }
+    if (policies?.pci && Array.isArray(policies.pci) && policies.pci.length > 0) {
+      pciCount++;
+    }
+  }
+
+  return {
+    categories: ['PII', 'PHI', 'PCI'],
+    seriesData: [piiCount, phiCount, pciCount]
+  };
+};

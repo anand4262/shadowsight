@@ -24,7 +24,7 @@ type PropsType = {
   }>;
 };
 
-export const chartComponentMap: Record<string, React.FC<{ /* data: CSVRecord[]; */ [key: string]: any }>> = {
+ const ChartComponentMap: Record<string, React.FC<{ /* data: CSVRecord[]; */ [key: string]: any }>> = {
   emailDomainActivity: EmailDomainChart,
   activityCountByRiskScore: RiskScoreBarChart,
   activityOverview: ActivityOverviewChart,
@@ -58,6 +58,17 @@ useEffect(() => {
     return null;
   }
 
+   const ChartComponentMap: Record<string, React.FC<{ /* data: CSVRecord[]; */ [key: string]: any }>> = {
+  emailDomainActivity: EmailDomainChart,
+  activityCountByRiskScore: RiskScoreBarChart,
+  activityOverview: ActivityOverviewChart,
+  dataLeakageByDate: DataLeakageByDate,
+  managerOutcomeSummary: ManagerOutcomeDistribution,
+  activityCountByHour: ActivityByHourChart,
+  dataLeakageByUser: DataLeakageByUserFiltered,
+  sensitiveDataBreachSummary: SensitiveDataBreachSummaryChart
+};
+
   return (
     <>
       <Suspense fallback={<OverviewCardsSkeleton />}>
@@ -74,7 +85,7 @@ useEffect(() => {
       <div ref={dashboardRef} className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-9 2xl:gap-7.5">
      
         {selected.map((select) => {
-          const ChartComponent = chartComponentMap[select.value];
+          const ChartComponent = ChartComponentMap[select.value];
           return ChartComponent ? (
             <motion.div
             key={select.value}
@@ -82,7 +93,7 @@ useEffect(() => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.4 }}
-            className="col-span-12 xl:col-span-6"
+            className="col-span-12 xl:col-span-12"
           >
               <ChartComponent   />
           </motion.div>

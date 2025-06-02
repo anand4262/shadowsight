@@ -7,6 +7,7 @@ import { CloseIcon, UploadIcon } from "@/assets/icons";
 type UploadedFileProps = {
   message: string;
   size: number;
+   status: 'pending' | 'uploading' | 'completed' | 'failed';  
   progress: number;
   onClose: () => void;
    onRetry?: () => void;
@@ -19,7 +20,7 @@ const formatSize = (bytes: number): string => {
   else return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-const UploadedFile = ({ message, size, progress, onClose, onRetry}: UploadedFileProps) => {
+const UploadedFile = ({ message, size, progress, status, onClose, onRetry}: UploadedFileProps) => {
   const [animatedProgress, setAnimatedProgress] = useState(0);
 
   // Update animated progress whenever the actual progress prop changes
@@ -51,14 +52,15 @@ const UploadedFile = ({ message, size, progress, onClose, onRetry}: UploadedFile
           style={{ width: `${animatedProgress}%` }}  // This is the dynamic width based on progress
         />
       </div>
-      {onRetry && progress < 100 && (
-              <button
-                onClick={onRetry}
-                className="mt-3 rounded-lg px-2 py-2 text-sm font-medium text-white bg-[#5750F1] hover:bg-opacity-90 "
-              >
-                Retry
-              </button>
+      {onRetry && status === "failed" && (
+        <button
+          onClick={onRetry}
+          className="mt-2 text-sm text-blue-600 underline"
+        >
+          Retry
+        </button>
       )}
+
       <p className="text-right text-xs mt-1 text-gray-500">
         {animatedProgress < 100 ? `${animatedProgress}%` : "Uploaded"}
       </p>

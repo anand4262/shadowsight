@@ -238,11 +238,12 @@ export const UploadCsvFile = () => {
 
       {uploadedFiles.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-          {uploadedFiles.map(({ fileName, fileSize, uploadProgress }) => (
+          {uploadedFiles.map(({ fileName, fileSize, uploadProgress, status }) => (
             <UploadedFile
               key={fileName}
               message={fileName}
               size={fileSize}
+              status={status}
               progress={uploadProgress}
               onClose={() => handleRemoveFile(fileName)}
               onRetry={() => retryUpload(fileName)}

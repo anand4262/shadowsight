@@ -1,5 +1,6 @@
 "use client"
-import { Suspense, useRef} from "react";
+import { Suspense, useRef, useEffect, useState} from "react";
+import { useRouter } from "next/navigation";
 import { OverviewCardsSkeleton } from "./_components/overview-cards/skeleton";
 import {EmailDomainChart} from "@/components/Charts/EmailDomains"
 import { ActivityOverviewChart } from '@/components/Charts/ActivityOverviewChart';
@@ -37,10 +38,26 @@ export const chartComponentMap: Record<string, React.FC<{ /* data: CSVRecord[]; 
 
 export default  function Home({ searchParams }: PropsType) {
   //const extractTimeFrame = createTimeFrameExtractor(selected_time_frame);
-  //const CSVRecords = useSelector((state: RootState) => state.csv.data);
+  const [isClientReady, setIsClientReady] = useState(false);
+  const router = useRouter();
+  const CSVRecords = useSelector((state: RootState) => state.csv.data);
   const selected = useSelector((state: RootState) => state.selected.selected);
-  console.log(selected)
   const dashboardRef = useRef<HTMLDivElement | null>(null);
+
+useEffect(() => {
+    // Prevent flicker: block render until we check data
+    if (CSVRecords.length === 0) {
+      router.replace("/upload");
+    } else {
+      setIsClientReady(true);
+    }
+  }, [CSVRecords, router]);
+
+  if (!isClientReady) {
+    // Prevent any UI from showing while deciding
+    return null;
+  }
+
   return (
     <>
       <Suspense fallback={<OverviewCardsSkeleton />}>
@@ -72,15 +89,6 @@ export default  function Home({ searchParams }: PropsType) {
               
           ) : <div className="col-span-12">Nothing is selected</div>;
         })}
-     
-
-      {/* <EmailDomainChart className="col-span-12 xl:col-span-6" />
-      <RiskScoreBarChart  className="col-span-12 xl:col-span-6"/>
-      <ActivityOverviewChart   className="col-span-12 xl:col-span-6"/>
-      <DataLeakageByDate className="col-span-12 xl:col-span-6"/>
-      <ManagerOutcomeDistribution className="col-span-12 xl:col-span-6"/>
-      <ActivityByHourChart className="col-span-12 xl:col-span-6"/>
-      <DataLeakageByUserFiltered className="col-span-12 xl:col-span-6"/> */}
       {/* <HighRiskEmployeeChart /> */}
         <div className="col-span-12 grid xl:col-span-8">
           

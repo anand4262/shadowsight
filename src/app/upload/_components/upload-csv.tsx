@@ -2,54 +2,68 @@
 
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/Store";
-import { addUploadedFile, updateProgress, removeUploadedFile, clearAllUploadedFiles } from "@/store/slices/uploadSlice";
-import { setCsvData, setProcessedData, setLoading, setError, resetState } from "@/store/slices/CSVSlice";
+import {
+  addUploadedFile,
+  updateProgress,
+  removeUploadedFile,
+  clearAllUploadedFiles,
+} from "@/store/slices/uploadSlice";
+import {
+  setCsvData,
+  setProcessedData,
+  setLoading,
+  setError,
+  resetState,
+} from "@/store/slices/CSVSlice";
 import { processData } from "@/utils/GlobalHelpers";
 import { ShowcaseSection } from "@/components/Layouts/showcase-section";
 import UploadedFile from "@/components/UploadedFile";
 import { UploadIcon } from "@/assets/icons";
 import readCSVFile from "@/utils/readCSVFile";
 import { useDropzone } from "react-dropzone";
-import { useState } from "react";
-import {sanitizeDataAsync }from "@/utils/SanitizeData"
+import { useState, useEffect } from "react";
+import { sanitizeDataAsync } from "@/utils/SanitizeData";
+import { Alert } from "@/components/ui-elements/alert";
+
+type AlertState = {
+  variant: "error" | "success" | "warning";
+  title: string;
+  description: string;
+} | null;
 
 export const UploadCsvFile = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const uploadedFiles = useSelector((state: RootState) => state.uploads.uploadedFiles);
-  const [fileObjects, setFileObjects] = useState<File[]>([]);  // Store actual File objects temporarily
+  const uploadedFiles = useSelector(
+    (state: RootState) => state.uploads.uploadedFiles
+  );
+  const [fileObjects, setFileObjects] = useState<File[]>([]);
+  const [alert, setAlert] = useState<AlertState>(null);
+  const isUploading = uploadedFiles.some(
+    (file) => file.uploadProgress < 100
+  );
 
-  // File validation (CSV and size check)
   const validateFile = (file: File): boolean => {
     const isCSV = file.name.endsWith(".csv") && file.type === "text/csv";
-    const isValidSize = file.size <= 10 * 1024 * 1024; // 10 MB
+    const isValidSize = file.size <= 10 * 1024 * 1024;
 
     if (!isCSV) {
-      alert("Invalid file type. Please upload CSV files only.");
+      setAlert({
+        variant: "error",
+        title: "Invalid File Type",
+        description: "Only CSV files are allowed.",
+      });
+      return false;
     } else if (!isValidSize) {
-      alert("File is too large. Maximum allowed size is 10MB.");
+      setAlert({
+        variant: "error",
+        title: "File Too Large",
+        description: "Maximum allowed size is 10MB.",
+      });
+      return false;
     }
-    return isCSV && isValidSize;
+    return true;
   };
 
-  // Handle the file drop (or file select via click)
-  const onDrop = (acceptedFiles: File[]) => {
-    const validCsvFiles = acceptedFiles.filter((file) => validateFile(file));
-
-    if (validCsvFiles.length === 0) return;
-
-    validCsvFiles.forEach((file) => {
-      // Store file metadata (name, size, progress) in Redux
-      dispatch(addUploadedFile({ fileName: file.name, fileSize: file.size, uploadProgress: 0, status: "pending" }));
-
-      // Temporarily store the File object in component state
-      setFileObjects((prevFiles) => [...prevFiles, file]);
-
-      // Start the upload progress (real-time progress update)
-      simulateUpload(file);
-    });
-  };
-
-  // Simulate file upload progress (this will update the progress bar)
   const simulateUpload = (file: File) => {
     let progress = 0;
     const interval = setInterval(() => {
@@ -60,64 +74,127 @@ export const UploadCsvFile = () => {
         clearInterval(interval);
         dispatch(updateProgress({ fileName: file.name, progress: 100 }));
       }
-    }, 200); // Adjust the speed of progress simulation as needed
+    }, 200);
   };
 
-  // Parse CSV data after the upload is complete (on Save button click)
+  const onDrop = (acceptedFiles: File[]) => {
+    const existingFileNames = uploadedFiles.map((f) => f.fileName);
+    const remainingSlots = 5 - uploadedFiles.length;
+
+    if (remainingSlots <= 0) {
+      setAlert({
+        variant: "error",
+        title: "Upload Limit Reached",
+        description: "You can only upload up to 5 CSV files.",
+      });
+      return;
+    }
+
+    const validCsvFiles: File[] = [];
+    const skippedDuplicates: string[] = [];
+
+    for (const file of acceptedFiles) {
+      if (existingFileNames.includes(file.name)) {
+        skippedDuplicates.push(file.name);
+        continue;
+      }
+
+      if (validateFile(file)) {
+        validCsvFiles.push(file);
+      }
+
+      if (validCsvFiles.length >= remainingSlots) break;
+    }
+
+    if (skippedDuplicates.length > 0) {
+      setAlert({
+        variant: "error",
+        title: "Duplicate File(s)",
+        description: `Already uploaded: ${skippedDuplicates.join(", ")}`,
+      });
+    }
+
+    if (
+      validCsvFiles.length < acceptedFiles.length - skippedDuplicates.length
+    ) {
+      setAlert({
+        variant: "warning",
+        title: "Some Files Skipped",
+        description: `Only ${remainingSlots} more file(s) allowed.`,
+      });
+    }
+
+    validCsvFiles.forEach((file) => {
+      dispatch(
+        addUploadedFile({
+          fileName: file.name,
+          fileSize: file.size,
+          uploadProgress: 0,
+          status: "pending",
+        })
+      );
+      setFileObjects((prevFiles) => [...prevFiles, file]);
+      simulateUpload(file);
+    });
+  };
+
   const parseCSVFile = async (file: File) => {
     try {
-      const parsedData = await readCSVFile(file);  // Pass the actual File object
-      const sanitizedData = await sanitizeDataAsync(parsedData)
-      
-      dispatch(setCsvData(sanitizedData));  // Store parsed CSV data in Redux
-      const processedData = processData(parsedData); // Process parsed data if necessary
-      dispatch(setProcessedData(processedData)); // Store processed data in Redux
+      const parsedData = await readCSVFile(file);
+      const sanitizedData = await sanitizeDataAsync(parsedData);
+      dispatch(setCsvData(sanitizedData));
+      const processedData = processData(parsedData);
+      dispatch(setProcessedData(processedData));
     } catch (error: unknown) {
       if (error instanceof Error) {
-        dispatch(setError("Error during CSV parsing: " + error.message));
+        dispatch(setError("Error parsing CSV: " + error.message));
       } else {
-        dispatch(setError("An unknown error occurred during CSV parsing"));
+        dispatch(setError("Unknown error during CSV parsing"));
       }
     }
   };
 
-  // Handle Save: Parse CSV and process data when the user clicks Save
   const handleSave = async () => {
     dispatch(setLoading(true));
 
     try {
       for (const uploaded of uploadedFiles) {
-        const { fileName, uploadProgress } = uploaded;
-
-        // Only parse if the upload progress reaches 100%
-        if (uploadProgress === 100) {
-          // Find the actual File object in state by matching fileName
-          const file = fileObjects.find((f) => f.name === fileName);
+        if (uploaded.uploadProgress === 100) {
+          const file = fileObjects.find((f) => f.name === uploaded.fileName);
           if (file) {
-            await parseCSVFile(file);  // Only parse when progress is 100%
+            await parseCSVFile(file);
+            setAlert({
+              variant: "success",
+              title: "Upload Successful",
+              description: `${file.name} has been uploaded and processed.`,
+            });
           }
         }
       }
     } catch (error) {
-      if (error instanceof Error) {
-        dispatch(setError(error.message));
-      }
+      if (error instanceof Error) dispatch(setError(error.message));
     } finally {
-      dispatch(setLoading(false));  // End loading state after process finishes
+      dispatch(setLoading(false));
     }
   };
 
-  // Handle Clear: Reset all uploaded files and parsed data
   const handleClear = () => {
-    dispatch(clearAllUploadedFiles()); // Clears the uploaded files from Redux
+    dispatch(clearAllUploadedFiles());
     dispatch(resetState());
-    setFileObjects([]);  // Reset the local state of file objects
+    setFileObjects([]);
   };
 
-  // Handle File Removal: Remove individual files from Redux state
   const handleRemoveFile = (fileName: string) => {
-    dispatch(removeUploadedFile(fileName)); // Removes the specific file from Redux state
-    setFileObjects((prev) => prev.filter((file) => file.name !== fileName)); // Remove from local state
+    dispatch(removeUploadedFile(fileName));
+    setFileObjects((prev) => prev.filter((file) => file.name !== fileName));
+  };
+
+  const retryUpload = (fileName: string) => {
+    const file = fileObjects.find((f) => f.name === fileName);
+    if (file) {
+      dispatch(updateProgress({ fileName, progress: 0 }));
+      simulateUpload(file);
+    }
   };
 
   const { getRootProps, getInputProps } = useDropzone({
@@ -126,9 +203,27 @@ export const UploadCsvFile = () => {
     onDrop,
   });
 
+  useEffect(() => {
+    if (alert) {
+      const timeout = setTimeout(() => setAlert(null), 2500);
+      return () => clearTimeout(timeout);
+    }
+  }, [alert]);
+
   return (
     <ShowcaseSection title="Upload your CSV files" className="!p-7">
-      <div {...getRootProps()} className="relative dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary mb-5 flex flex-col items-center justify-center w-full h-40 rounded-xl border border-dashed border-gray-300 bg-gray-100 hover:border-[#5750F1] cursor-pointer p-4">
+      {alert && (
+        <Alert
+          variant={alert.variant}
+          title={alert.title}
+          description={alert.description}
+          className="mb-4"
+        />
+      )}
+      <div
+        {...getRootProps()}
+        className="relative dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary mb-5 flex flex-col items-center justify-center w-full h-40 rounded-xl border border-dashed border-gray-300 bg-gray-100 hover:border-[#5750F1] cursor-pointer p-4"
+      >
         <input {...getInputProps()} />
         <div className="flex dark:border-dark-3 dark:bg-gray-dark size-14 items-center justify-center rounded-full border border-gray-300 bg-white">
           <UploadIcon />
@@ -136,22 +231,44 @@ export const UploadCsvFile = () => {
         <p className="mt-2 text-sm font-medium">
           <span className="text-[#5750F1]">Click to upload</span> or drag & drop CSV files
         </p>
-        <p className="text-xs text-gray-500 mt-1">Only .csv files are accepted. Maximum 5 files, each up to 10MB.</p>
+        <p className="text-xs text-gray-500 mt-1">
+          Only .csv files allowed. Max 5 files, each up to 10MB.
+        </p>
       </div>
 
       {uploadedFiles.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
           {uploadedFiles.map(({ fileName, fileSize, uploadProgress }) => (
-            <UploadedFile key={fileName} message={fileName} size={fileSize} progress={uploadProgress} onClose={() => handleRemoveFile(fileName)} />
+            <UploadedFile
+              key={fileName}
+              message={fileName}
+              size={fileSize}
+              progress={uploadProgress}
+              onClose={() => handleRemoveFile(fileName)}
+              onRetry={() => retryUpload(fileName)}
+            />
           ))}
         </div>
       )}
 
       <div className="flex justify-end gap-3 mt-6">
-        <button type="button" className="rounded-lg border border-gray-400 px-6 py-2 text-sm font-medium text-gray-800 hover:shadow dark:border-dark-3 dark:text-white" onClick={handleClear}>
+        <button
+          type="button"
+          className="rounded-lg border border-gray-400 px-6 py-2 text-sm font-medium text-gray-800 hover:shadow dark:border-dark-3 dark:text-white"
+          onClick={handleClear}
+        >
           Clear
         </button>
-        <button type="button" className={`rounded-lg px-6 py-2 text-sm font-medium text-white bg-[#5750F1] hover:bg-opacity-90 transition ${uploadedFiles.length === 0 ? "opacity-50 cursor-not-allowed" : ""}`} disabled={uploadedFiles.length === 0} onClick={handleSave}>
+        <button
+          type="button"
+          className={`rounded-lg px-6 py-2 text-sm font-medium text-white bg-[#5750F1] hover:bg-opacity-90 transition ${
+            uploadedFiles.length === 0 || isUploading
+              ? "opacity-50 cursor-not-allowed"
+              : ""
+          }`}
+          disabled={uploadedFiles.length === 0 || isUploading}
+          onClick={handleSave}
+        >
           Save
         </button>
       </div>

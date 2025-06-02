@@ -9,6 +9,7 @@ type UploadedFileProps = {
   size: number;
   progress: number;
   onClose: () => void;
+   onRetry?: () => void;
 };
 
 // Format the size to a human-readable string (B, KB, MB)
@@ -18,7 +19,7 @@ const formatSize = (bytes: number): string => {
   else return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-const UploadedFile = ({ message, size, progress, onClose }: UploadedFileProps) => {
+const UploadedFile = ({ message, size, progress, onClose, onRetry}: UploadedFileProps) => {
   const [animatedProgress, setAnimatedProgress] = useState(0);
 
   // Update animated progress whenever the actual progress prop changes
@@ -50,7 +51,14 @@ const UploadedFile = ({ message, size, progress, onClose }: UploadedFileProps) =
           style={{ width: `${animatedProgress}%` }}  // This is the dynamic width based on progress
         />
       </div>
-
+      {onRetry && progress < 100 && (
+              <button
+                onClick={onRetry}
+                className="mt-3 rounded-lg px-2 py-2 text-sm font-medium text-white bg-[#5750F1] hover:bg-opacity-90 "
+              >
+                Retry
+              </button>
+      )}
       <p className="text-right text-xs mt-1 text-gray-500">
         {animatedProgress < 100 ? `${animatedProgress}%` : "Uploaded"}
       </p>

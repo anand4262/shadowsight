@@ -12,6 +12,7 @@ import {
   setCsvData,
   setProcessedData,
   setLoading,
+   removeCsvDataForFile,
   setError,
   resetState,
 } from "@/store/slices/CSVSlice";
@@ -139,20 +140,24 @@ export const UploadCsvFile = () => {
   };
 
   const parseCSVFile = async (file: File) => {
-    try {
-      const parsedData = await readCSVFile(file);
-      const sanitizedData = await sanitizeDataAsync(parsedData);
-      dispatch(setCsvData(sanitizedData));
-      const processedData = processData(parsedData);
-      dispatch(setProcessedData(processedData));
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        dispatch(setError("Error parsing CSV: " + error.message));
-      } else {
-        dispatch(setError("Unknown error during CSV parsing"));
-      }
+  try {
+    const parsedData = await readCSVFile(file);
+    const sanitizedData = await sanitizeDataAsync(parsedData);
+
+    // Dispatch with the new payload shape: fileName + records
+    dispatch(setCsvData({ fileName: file.name, records: sanitizedData }));
+
+    const processedData = processData(parsedData);
+    dispatch(setProcessedData(processedData));
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      dispatch(setError("Error parsing CSV: " + error.message));
+    } else {
+      dispatch(setError("Unknown error during CSV parsing"));
     }
-  };
+  }
+};
+
 
   const handleSave = async () => {
     dispatch(setLoading(true));
@@ -184,8 +189,10 @@ export const UploadCsvFile = () => {
     setFileObjects([]);
   };
 
-  const handleRemoveFile = (fileName: string) => {
-    dispatch(removeUploadedFile(fileName));
+
+   const handleRemoveFile = (fileName: string) => {
+    dispatch(removeUploadedFile(fileName)); 
+    dispatch(removeCsvDataForFile({ fileName }));
     setFileObjects((prev) => prev.filter((file) => file.name !== fileName));
   };
 

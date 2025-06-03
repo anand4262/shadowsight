@@ -1,3 +1,30 @@
+import { CSVRecord } from "@/store/types/CSVTypes";  // Adjust path as needed
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/Store";
+
+
+export const useFetchCSVData = (): Record<string, CSVRecord[]> => {
+  const data = useSelector((state: RootState) => state.csv.data);
+  return data ?? {}; 
+};
+
+
+export const useFlatCSVData = (): CSVRecord[] => {
+  const groupedData = useSelector((state: RootState) => state.csv.data);
+  return Object.values(groupedData).reduce(
+    (acc: CSVRecord[], records) => acc.concat(records),
+    []
+  );
+}
+
+export const useTotalCSVRecordCount = (): number => {
+  const data = useFetchCSVData();
+  return Object.values(data).reduce((acc, records) => {
+    return acc + (Array.isArray(records) ? records.length : 0);
+  }, 0);
+};
+
+
 export const processData = (data: any[]) => {
     const processed = data.reduce((acc, record) => {
       acc[record.integration] = (acc[record.integration] || 0) + 1;

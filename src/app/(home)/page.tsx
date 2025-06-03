@@ -17,6 +17,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store/Store';
 import DownloadJSONButton from "@/components/DownloadJSONButton"
 import DownloadImageButton from "@/components/DownloadImageButton"
+import {useTotalCSVRecordCount} from "@/utils/GlobalHelpers"
 
 type PropsType = {
   searchParams: Promise<{
@@ -43,10 +44,11 @@ export default  function Home({ searchParams }: PropsType) {
   const CSVRecords = useSelector((state: RootState) => state.csv.data);
   const selected = useSelector((state: RootState) => state.selected.selected);
   const dashboardRef = useRef<HTMLDivElement | null>(null);
+   const totalRecords = useTotalCSVRecordCount(); 
 
 useEffect(() => {
     // Prevent flicker: block render until we check data
-    if (CSVRecords.length === 0) {
+    if (totalRecords === 0) {
       router.replace("/upload");
     } else {
       setIsClientReady(true);

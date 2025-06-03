@@ -1,6 +1,18 @@
 import * as Icons from "../icons";
 
-export const NAV_DATA = [
+type NavItem = {
+  title: string;
+  icon: any; // or a specific type if you have one
+  url: string;
+  items: NavItem[];
+};
+
+export type NavSection = {
+  label: string;
+  items: NavItem[];
+};
+
+export const NAV_DATA: NavSection[] = [
   {
     label: "MAIN MENU",
     items: [
@@ -8,24 +20,14 @@ export const NAV_DATA = [
         title: "Dashboard",
         icon: Icons.HomeIcon,
         url: "/",
-        items: [
-        ],
+        items: [],
       },
- 
       {
         title: "File Upload",
         icon: Icons.Alphabet,
         url: "/upload",
-        items: [
-          
-        ],
+        items: [],
       },
     ],
   },
-  /* {
-    label: "OTHERS",
-    items: [
-      
-    ],
-  }, */
 ];

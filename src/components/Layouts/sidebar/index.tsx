@@ -10,22 +10,22 @@ import { NAV_DATA } from "./data";
 import { ArrowLeftIcon, ChevronUp } from "./icons";
 import { MenuItem } from "./menu-item";
 import { useSidebarContext } from "./sidebar-context";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/Store";
 import { AnimatePresence, motion } from "framer-motion";
+import type {NavSection} from "./data/index"
+import {useTotalCSVRecordCount} from "@/utils/GlobalHelpers"
 
 export function Sidebar() {
   const pathname = usePathname();
   const { setIsOpen, isOpen, isMobile, toggleSidebar } = useSidebarContext();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const CSVRecords = useSelector((state: RootState) => state.csv.data);
-
+  const totalRecords = useTotalCSVRecordCount(); 
+  console.log("records", totalRecords)
   const toggleExpanded = (title: string) => {
     setExpandedItems((prev) => (prev.includes(title) ? [] : [title]));
   };
 
   useEffect(() => {
-    NAV_DATA.some((section) => {
+    (NAV_DATA as NavSection[]).some((section) => {
       return section.items.some((item) => {
         return item.items.some((subItem) => {
           if (subItem.url === pathname) {
@@ -44,7 +44,7 @@ export function Sidebar() {
     ...section,
     items: section.items.filter((item) => {
       if (item.title === "Dashboard") {
-        return CSVRecords.length > 0;
+        return totalRecords > 0;
       }
       return true;
     })

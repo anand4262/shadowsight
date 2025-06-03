@@ -1,41 +1,68 @@
 // /src/store/slices/csvSlice.ts
-import { createSlice, PayloadAction} from "@reduxjs/toolkit";
-import { CSVState, CSVRecord } from "../types/CSVTypes";  
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { CSVState, CSVRecord } from "../types/CSVTypes";
 
-// Initial state
+// Initial state with data mapped by file name (or unique ID)
 const initialState: CSVState = {
-  data: [],
+  data: {},  // Change from CSVRecord[] to { [fileName: string]: CSVRecord[] }
   isLoading: false,
   error: null,
   processedData: {},
 };
 
-// Create slice for CSV data
 const CSVSlice = createSlice({
   name: 'CSVRecords',
   initialState,
   reducers: {
-    setCsvData: (state, action: PayloadAction<CSVRecord[]>) => {
-      state.data = [...state.data, ...action.payload];
+    // Add data per file
+    setCsvData: (
+      state,
+      action: PayloadAction<{ fileName: string; records: CSVRecord[] }>
+    ) => {
+      const { fileName, records } = action.payload;
+      state.data[fileName] = records;
     },
-    setLoading: (state, action: PayloadAction<boolean>) => {
-      state.isLoading = action.payload;
+
+    // Remove data for a specific file
+    removeCsvDataForFile: (
+      state,
+      action: PayloadAction<{ fileName: string }>
+    ) => {
+      delete state.data[action.payload.fileName];
     },
-    setError: (state, action: PayloadAction<string | null>) => {
-      state.error = action.payload;
-    },
-    setProcessedData: (state, action: PayloadAction<{ [key: string]: number }>) => {
-      state.processedData = action.payload;
-    },
+
+    // Clear entire store
     resetState: (state) => {
-      // Reset the entire state when the "Clear" button is clicked
-      state.data = [];
+      state.data = {};
       state.isLoading = false;
       state.error = null;
       state.processedData = {};
     },
+
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload;
+    },
+
+    setError: (state, action: PayloadAction<string | null>) => {
+      state.error = action.payload;
+    },
+
+    setProcessedData: (
+      state,
+      action: PayloadAction<{ [key: string]: number }>
+    ) => {
+      state.processedData = action.payload;
+    },
   },
 });
 
-export const { setCsvData, setLoading, setError, setProcessedData, resetState } = CSVSlice.actions;
+export const {
+  setCsvData,
+  removeCsvDataForFile,
+  resetState,
+  setLoading,
+  setError,
+  setProcessedData,
+} = CSVSlice.actions;
+
 export default CSVSlice.reducer;

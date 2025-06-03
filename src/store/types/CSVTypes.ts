@@ -20,9 +20,12 @@ export interface CSVRecord {
   }
   
   export interface CSVState {
-    data: CSVRecord[]; 
-    isLoading: boolean;
-    error: string | null;
-    processedData: { [key: string]: number };
-  }
-  
+  data: {
+    [fileName: string]: CSVRecord[];
+  };
+  isLoading: boolean;
+  error: string | null;
+  processedData: {
+    [key: string]: number;
+  };
+}

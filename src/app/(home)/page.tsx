@@ -1,15 +1,9 @@
 "use client";
-import { evaluateRisk } from "@/utils/riskrules";
-import { SuggestionCard } from "@/components/suggestioncard";
 import { OverviewCardsSkeleton } from "./_components/overview-cards/skeleton";
-
-import { enhanceWithML } from "@/utils/enhanceWithMLHelps";
-
 import { Suspense, useRef, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
-
 import { RootState } from "@/store/Store";
 import { useTotalCSVRecordCount, useFlatCSVData } from "@/utils/GlobalHelpers";
 import MultiSelect from "@/components/MultiSelect";
@@ -23,7 +17,6 @@ export default function Home() {
  const CSVRecords = useFlatCSVData();
   const selected = useSelector((state: RootState) => state.selected.selected);
   const totalRecords = useTotalCSVRecordCount();
-  const records = enhanceWithML(CSVRecords);
   const dashboardRef = useRef<HTMLDivElement | null>(null);
   const [isClientReady, setIsClientReady] = useState(false);
 
@@ -75,31 +68,6 @@ export default function Home() {
           );
         })}
       </div>
-
-{/* Suggestions Section */}
-<div className="col-span-12 mt-8">
-  <h2 className="text-xl font-semibold mb-4">Smart Risk Suggestions (Rule + ML)</h2>
-  {records.slice(0, 10).map((record: any, idx: number) => {
-    const riskScore = record.riskScore ?? record.riskscore ?? 0;
-    const integration = record.integration ?? "unknown";
-    const mlComment = record.mlComment ?? "";
-    const suggestion = evaluateRisk({ riskScore, integration });
-
-    return suggestion ? (
-      <SuggestionCard
-        key={idx}
-        suggestion={suggestion}
-        recordMeta={{
-          user: record.user,
-          activityId: record.activityId,
-          date: record.date,
-          mlComment: mlComment, // ✅ Optional ML insight
-        }}
-      />
-    ) : null;
-  })}
-</div>
-
     </>
   );
 }

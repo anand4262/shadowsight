@@ -18,6 +18,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/Store";
 import DownloadJSONButton from "@/components/DownloadJSONButton";
 import DownloadImageButton from "@/components/DownloadImageButton";
+import { enhanceWithML } from "@/utils/enhanceWithMLHelps";
 
 type PropsType = {
   searchParams: Promise<{
@@ -41,7 +42,8 @@ export const chartComponentMap: Record<
 
 export default function Home({ searchParams }: PropsType) {
   const selected = useSelector((state: RootState) => state.selected.selected);
-  const records = useSelector((state: RootState) => state.csv.data);
+  const rawRecords = useSelector((state: RootState) => state.csv.data);
+  const records = enhanceWithML(rawRecords);
   const dashboardRef = useRef<HTMLDivElement | null>(null);
 
   return (
@@ -82,49 +84,30 @@ export default function Home({ searchParams }: PropsType) {
         })}
       </div>
 
-      {/* Suggestions Section */}
-      <h2 className="text-xl font-semibold mb-4">ML-Based Suggestions</h2>
-{records.slice(0, 10).map((record: any, idx: number) => {
-  // ✅ Fix: Check multiple casing possibilities
-  const riskScore = record.riskScore ?? record.riskscore ?? 0;
-  const integration = record.integration ?? "unknown";
-  const activityType = record.activityType ?? record.activitytype ?? "unknown";
+{/* Suggestions Section */}
+<div className="col-span-12 mt-8">
+  <h2 className="text-xl font-semibold mb-4">Smart Risk Suggestions (Rule + ML)</h2>
+  {records.slice(0, 10).map((record: any, idx: number) => {
+    const riskScore = record.riskScore ?? record.riskscore ?? 0;
+    const integration = record.integration ?? "unknown";
+    const mlComment = record.mlComment ?? "";
+    const suggestion = evaluateRisk({ riskScore, integration });
 
-  // ✅ Log to verify values
-  console.log("Evaluating risk for input:", { riskScore, integration, activityType });
+    return suggestion ? (
+      <SuggestionCard
+        key={idx}
+        suggestion={suggestion}
+        recordMeta={{
+          user: record.user,
+          activityId: record.activityId,
+          date: record.date,
+          mlComment: mlComment, // ✅ Optional ML insight
+        }}
+      />
+    ) : null;
+  })}
+</div>
 
-  const suggestion = evaluateRisk({
-    riskScore,
-    integration
-  });
-
-  return suggestion ? (
-    <SuggestionCard
-  key={idx}
-  suggestion={suggestion}
-  recordMeta={{
-    user: record.user,
-    activityId: record.activityId,
-    date: record.date,
-  }}
-/>
-
-  ) : null;
-})}
-
-      <div className="col-span-12 mt-8">
-        <h2 className="text-xl font-semibold mb-4">ML-Based Suggestions</h2>
-        {records.slice(0, 10).map((record: any, idx: number) => {
-          const suggestion = evaluateRisk({
-            riskScore: record.riskscore,
-            integration: record.integration,
-          });
-
-          return suggestion ? (
-            <SuggestionCard key={idx} suggestion={suggestion} />
-          ) : null;
-        })}
-      </div>
     </>
   );
 }

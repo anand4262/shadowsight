@@ -1,9 +1,12 @@
+import { RiskSuggestion } from "@/utils/riskrules";
+
 type SuggestionCardProps = {
   suggestion: RiskSuggestion;
   recordMeta: {
     user?: string;
     activityId?: string;
     date?: string;
+    mlComment?: string; // ✅ ML message, optional
   };
 };
 
@@ -20,6 +23,12 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({ suggestion, reco
     <div className={`p-4 mb-4 rounded shadow-sm ${bgColor}`}>
       <p className="font-bold">{message}</p>
       <p className="text-sm text-gray-700">Recommended Action: {action}</p>
+
+      {/*  Optional ML-based comment if provided */}
+      {recordMeta.mlComment && (
+        <p className="text-xs italic text-purple-700 mt-1">{recordMeta.mlComment}</p>
+      )}
+
       <div className="text-xs text-gray-600 mt-2">
         {recordMeta.user && <div><strong>User:</strong> {recordMeta.user}</div>}
         {recordMeta.activityId && <div><strong>Activity ID:</strong> {recordMeta.activityId}</div>}

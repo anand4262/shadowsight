@@ -1,3 +1,4 @@
+
 export const processData = (data: any[]) => {
     const processed = data.reduce((acc, record) => {
       acc[record.integration] = (acc[record.integration] || 0) + 1;
@@ -374,3 +375,26 @@ export const getSensitiveDataBreachSummary = (data: any[]) => {
     seriesData: [piiCount, phiCount, pciCount]
   };
 };
+
+import { getKMeansLabels } from './MLHelps';
+
+export const enrichAndClusterRecords = (records: any[]) => {
+  // Step 1: Enrich records
+  const enriched = records.map((row) => ({
+    ...row,
+    emailCount: row.emailCount ?? 0,
+    usbCount: row.usbCount ?? 0,
+    cloudCount: row.cloudCount ?? 0,
+    riskScore: row.riskScore ?? 0,
+  }));
+
+  // Step 2: Apply KMeans clustering
+  const clusterLabels = getKMeansLabels(enriched);
+
+  // Step 3: Merge cluster label into each record
+  return enriched.map((row, idx) => ({
+    ...row,
+    cluster: clusterLabels[idx],
+  }));
+};
+

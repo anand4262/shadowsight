@@ -28,7 +28,7 @@ const DownloadJSONButton: React.FC = () => {
     <Button
         onClick={handleDownload}
         label="Download Data"
-        variant="green"
+        variant="primary"
         size="default"
         shape="rounded"
     />

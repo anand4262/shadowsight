@@ -171,7 +171,7 @@ export const UploadCsvFile = () => {
             setAlert({
               variant: "success",
               title: "Upload Successful",
-              description: `${file.name} has been uploaded and processed.`,
+              description: `file has been uploaded and processed.`,
             });
           }
         }

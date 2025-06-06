@@ -24,6 +24,7 @@
     "framer-motion": "^12.11.4",
     "html2canvas": "^1.4.1",
     "jsvectormap": "^1.6.0",
+    "ml-kmeans": "^6.0.0",
     "next": "^14.2.25",
     "next-themes": "^0.4.4",
     "nextjs-toploader": "^3.7.15",

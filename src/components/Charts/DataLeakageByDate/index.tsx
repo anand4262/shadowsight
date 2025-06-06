@@ -1,12 +1,10 @@
-import React, { useMemo, Suspense, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
-import { useSelector } from 'react-redux'; 
-import { RootState } from '@/store/Store';
-import { CSVRecord } from '@/store/types/CSVTypes';
 import { getDataLeakageByDate } from '@/utils/GlobalHelpers';
 import { cn } from '@/lib/utils';
-import ChartSkeleton from '@/components/ui/chartSkeleton';
+import { useFlatCSVData } from '@/utils/GlobalHelpers'; 
+import { CSVRecord } from '@/store/types/CSVTypes';
 
 const ApexChart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -15,9 +13,7 @@ type PropsType = {
 };
 
 const DataLeakageByDate: React.FC<PropsType> = ({ className }) => {
-  const uploadedFiles = useSelector((state: RootState) => state.csv.data) as CSVRecord[];
-  const safeData = Array.isArray(uploadedFiles) ? uploadedFiles : [];
-
+  const safeData: CSVRecord[] = useFlatCSVData();
   const [pageIndex, setPageIndex] = useState(0);
 
   const allDates = useMemo(() => {
@@ -55,25 +51,26 @@ const DataLeakageByDate: React.FC<PropsType> = ({ className }) => {
       toolbar: { show: false },
       fontFamily: 'inherit',
       animations: {
-        enabled: true,
-        speed: 800,
-        easing: 'easeinout', // this causes TS error
-        animateGradually: {
-          enabled: true,
-          delay: 150,
-        },
-        dynamicAnimation: {
-          enabled: true,
-          speed: 350,
-        },
-      } as any,
+  enabled: true,
+  speed: 800,
+  animateGradually: {
+    enabled: true,
+    delay: 150,
+  },
+  dynamicAnimation: {
+    enabled: true,
+    speed: 350,
+  },
+},
+
     },
     colors: ['#5750F1'],
     plotOptions: {
       bar: {
-        borderRadius: 8,
-        columnWidth: '55%'
-      }
+          horizontal: true, // <-- Switch orientation
+          borderRadius: 8,
+          barHeight: '60%', // Optional: adjust bar thickness
+        },
     },
     grid: {
       strokeDashArray: 5,
@@ -95,20 +92,22 @@ const DataLeakageByDate: React.FC<PropsType> = ({ className }) => {
         style: {
           fontSize: '12px',
           fontFamily: 'inherit',
-          colors: ['#6B7280']
-        }
-      }
+          colors: ['#6B7280'],
+        },
+      },
     },
     yaxis: {
-      title: { text: 'Leakage Incidents', style: { fontSize: '14px' } }
+      title: { text: 'Leakage Incidents', style: { fontSize: '14px' } },
     },
     dataLabels: {
       enabled: true,
-      style: { fontSize: '12px' }
+      style: { fontSize: '12px' },
     },
     tooltip: {
-      y: { formatter: (val) => `${val} activities` }
-    }
+      y: {
+        formatter: (val) => `${val} activities`,
+      },
+    },
   };
 
   return (
@@ -138,14 +137,12 @@ const DataLeakageByDate: React.FC<PropsType> = ({ className }) => {
             </button>
           </div>
         </div>
-        <Suspense fallback={<ChartSkeleton />}>
-          <ApexChart
-            options={options}
-            series={[{ name: 'Activity Count', data: seriesData }]}
-            type="bar"
-            height={350}
-          />
-        </Suspense>
+        <ApexChart
+          options={options}
+          series={[{ name: 'Activity Count', data: seriesData }]}
+          type="bar"
+          height={350}
+        />
       </div>
     </div>
   );

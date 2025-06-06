@@ -134,69 +134,6 @@ export const getActivityCountByRiskRange = (
   };
 };
 
-/* export const getDataLeakageByDate = (
-  data: any[]
-): { categories: string[]; seriesData: number[] } => {
-  const counts: Record<string, number> = {};
-  for (const row of data) {
-   const rowPolicyData = JSON.parse(row.policiesBreached)
-    const breaches = rowPolicyData?.dataLeakage;
-    if (Array.isArray(breaches) && breaches.length > 0) {
-      //const date = new Date(row.date).toISOString().split('T')[0]; // YYYY-MM-DD
-      const dateObj = new Date(row.date);
-      const date = `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${dateObj.getFullYear()}`;
-
-      counts[date] = (counts[date] || 0) + 1;
-    }
-  }
-
-  const categories = Object.keys(counts).sort(); // sorted by date
-  const seriesData = categories.map((date) => counts[date]);
-
-  return { categories, seriesData };
-}; */
-
-/* export const getDataLeakageByDate = (
-  data: any[]
-): { categories: string[]; seriesData: number[] } => {
-  const counts: Record<string, number> = {};
-
-  for (const row of data) {
-    try {
-      const rowPolicyData = JSON.parse(row.policiesBreached);
-      const breaches = rowPolicyData?.dataLeakage;
-
-      if (Array.isArray(breaches) && breaches.length > 0) {
-        const rawDate = row.date;
-        const dateObj = new Date(rawDate);
-
-        // Skip invalid or missing dates
-        if (!rawDate || isNaN(dateObj.getTime())) continue;
-
-        // Format date as dd/mm/yyyy
-        const formattedDate = `${String(dateObj.getDate()).padStart(2, '0')}/${String(
-          dateObj.getMonth() + 1
-        ).padStart(2, '0')}/${dateObj.getFullYear()}`;
-
-        counts[formattedDate] = (counts[formattedDate] || 0) + 1;
-      }
-    } catch (err) {
-      console.warn('Skipping invalid policiesBreached JSON:', row.policiesBreached);
-      continue;
-    }
-  }
-
-  // Sort dd/mm/yyyy chronologically
-  const categories = Object.keys(counts).sort((a, b) => {
-    const [ad, am, ay] = a.split('/').map(Number);
-    const [bd, bm, by] = b.split('/').map(Number);
-    return new Date(ay, am - 1, ad).getTime() - new Date(by, bm - 1, bd).getTime();
-  });
-
-  const seriesData = categories.map((date) => counts[date]);
-
-  return { categories, seriesData };
-}; */
 
 export const getDataLeakageByDate = (
   data: any[]
@@ -238,7 +175,7 @@ export const getDataLeakageByDate = (
 };
 
 
-export const getManagerOutcomeDistribution = (data: any[]) => {
+/* export const getManagerOutcomeDistribution = (data: any[]) => {
   const counts: Record<string, number> = {
     knownGoodActivity: 0,
     employeeCounselled: 0,
@@ -282,7 +219,27 @@ export const getManagerOutcomeDistribution = (data: any[]) => {
   ];
 
   return { labels, series };
+}; */
+
+export const getManagerOutcomeDistribution = (data: any[]) => {
+  const counts: Record<string, number> = {};
+
+  for (const row of data) {
+    const rawValue = row.managerAction;
+    const key = typeof rawValue === 'string' ? rawValue.trim().toLowerCase() : 'unknown';
+
+    // Convert to human-readable label (optional)
+    const label = key || 'unknown';
+
+    counts[label] = (counts[label] || 0) + 1;
+  }
+
+  const labels = Object.keys(counts);
+  const series = Object.values(counts);
+
+  return { labels, series };
 };
+
 
 export const getTimeOfDayDistribution = (data: any[]) => {
   const counts = new Array(24).fill(0);
@@ -330,7 +287,7 @@ export const getDataLeakageByUserFiltered = (data: any[]) => {
 
   // Filter users with >10 incidents
   const filtered = Object.entries(counts)
-    .filter(([_, count]) => count > 3)
+    .filter(([_, count]) => count > 10)
     .sort((a, b) => b[1] - a[1]); // Sort descending
 
   const labels = filtered.map(([user]) => user);

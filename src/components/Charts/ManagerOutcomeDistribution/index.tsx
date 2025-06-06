@@ -1,29 +1,24 @@
-import React, { useMemo, Suspense} from 'react';
+import React, { useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import {getManagerOutcomeDistribution} from "@/utils/GlobalHelpers"
+import { getManagerOutcomeDistribution, useFlatCSVData } from '@/utils/GlobalHelpers';
 import { ApexOptions } from 'apexcharts';
-import { useSelector } from 'react-redux'; 
-import { RootState } from '@/store/Store';
-import { CSVRecord } from '@/store/types/CSVTypes';
 import { cn } from '@/lib/utils';
 
 const ApexChart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 type PropsType = {
-    className?: string;
-  };
+  className?: string;
+};
 
 const ManagerOutcomeDistribution: React.FC<PropsType> = ({ className }) => {
-      const uploadedFiles = useSelector((state: RootState) => state.csv.data) as CSVRecord[];
-      
- const safeData = Array.isArray(uploadedFiles) ? uploadedFiles : [];
+  const flatData = useFlatCSVData();
 
- const { labels, series } = useMemo(() => {
-    if (safeData.length === 0) {
-      return { labels: [], series: [] }; 
+  const { labels, series } = useMemo(() => {
+    if (flatData.length === 0) {
+      return { labels: [], series: [] };
     }
-    return getManagerOutcomeDistribution(safeData);
-  }, [safeData]);
+    return getManagerOutcomeDistribution(flatData);
+  }, [flatData]);
 
   const options: ApexOptions = {
     chart: {
@@ -32,7 +27,6 @@ const ManagerOutcomeDistribution: React.FC<PropsType> = ({ className }) => {
       animations: {
         enabled: true,
         speed: 800,
-        easing: 'easeinout', // this causes TS error
         animateGradually: {
           enabled: true,
           delay: 150,
@@ -41,7 +35,7 @@ const ManagerOutcomeDistribution: React.FC<PropsType> = ({ className }) => {
           enabled: true,
           speed: 350,
         },
-      } as any,
+      },
     },
     labels,
     legend: {
@@ -63,7 +57,7 @@ const ManagerOutcomeDistribution: React.FC<PropsType> = ({ className }) => {
       <h3 className="text-lg font-semibold mb-4">Manager Outcome Summary</h3>
       <ApexChart options={options} series={series} type="pie" height={350} />
     </div>
-  )
-}
+  );
+};
 
-export default ManagerOutcomeDistribution
+export default ManagerOutcomeDistribution;

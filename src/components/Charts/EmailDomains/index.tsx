@@ -1,51 +1,73 @@
-"use client";
+'use client';
 
-import {  useSelector } from "react-redux";
-import {  RootState } from "@/store/Store"; 
-import { cn } from "@/lib/utils";
-import { getEmailDomainData, getActivityDataByDate } from "@/utils/GlobalHelpers"; 
-import { useState, useEffect } from "react";
-import dynamic from "next/dynamic";
-import type { ApexOptions } from "apexcharts"; 
+import { cn } from '@/lib/utils';
+import { getEmailDomainData, useFlatCSVData } from '@/utils/GlobalHelpers';
+import dynamic from 'next/dynamic';
+import { useMemo, useState } from 'react';
+import type { ApexOptions } from 'apexcharts';
 
-const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
+const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 type PropsType = {
   className?: string;
 };
 
-export function EmailDomainChart({className}: PropsType) {
-    const [formattedData, setFormattedData] = useState<{
-        domains: string[]; // Array of domain strings
-        activityCounts: number[]; // Array of activity counts (numbers)
-      }>({ domains: [], activityCounts: [] });
-  const uploadedFiles = useSelector((state: RootState) => state.csv.data);
+const PAGE_SIZE = 20;
+const TOP_N = 10; // How many top active domains to show in "Highly Active" mode
 
-  useEffect(() => {
-    if (uploadedFiles.length > 0) {
-      const data = getEmailDomainData(uploadedFiles); 
-      const test = getActivityDataByDate(uploadedFiles)
-      console.log("t2", test)
-      const domains = data.map((item) => item.domain); // Extract domains
-      const activityCounts = data.map((item) => item.count); // Extract activity counts
+const  EmailDomainChart = ({ className }: PropsType) => {
+  const csvData = useFlatCSVData();
+  const [page, setPage] = useState(0);
+  const [filterMode, setFilterMode] = useState<'highlyActive' | 'all'>('highlyActive');
 
-      setFormattedData({ domains, activityCounts }); 
-      
+  const domainData = useMemo(() => {
+    return getEmailDomainData(csvData).sort((a, b) => b.count - a.count);
+  }, [csvData]);
+
+  // Filtered & paginated data depending on filterMode
+  const currentPageData = useMemo(() => {
+    if (filterMode === 'highlyActive') {
+      // Only show top N domains, no pagination
+      const topDomains = domainData.slice(0, TOP_N);
+      return {
+        domains: topDomains.map((item) => item.domain),
+        activityCounts: topDomains.map((item) => item.count),
+      };
+    } else {
+      // Show paginated full data
+      const totalPages = Math.ceil(domainData.length / PAGE_SIZE);
+      // Clamp page so it doesn't go out of bounds if data changes
+      const validPage = Math.min(page, totalPages - 1);
+      const start = validPage * PAGE_SIZE;
+      const slice = domainData.slice(start, start + PAGE_SIZE);
+      return {
+        domains: slice.map((item) => item.domain),
+        activityCounts: slice.map((item) => item.count),
+      };
     }
-  }, [uploadedFiles]);
+  }, [filterMode, page, domainData]);
+
+  const totalPages = useMemo(() => {
+    if (filterMode === 'all') {
+      return Math.ceil(domainData.length / PAGE_SIZE);
+    }
+    return 1;
+  }, [filterMode, domainData]);
+
+  const maxY =
+    currentPageData.activityCounts.length > 0
+      ? Math.max(...currentPageData.activityCounts) + 20
+      : 100;
 
   const options: ApexOptions = {
     chart: {
-      type: "bar", // Ensuring chart type is "bar"
+      type: 'bar',
       height: 350,
-      toolbar: {
-        show: false,
-      },
-      fontFamily: "inherit",
+      toolbar: { show: false },
+      fontFamily: 'inherit',
       animations: {
         enabled: true,
         speed: 800,
-        easing: 'easeinout', // this causes TS error
         animateGradually: {
           enabled: true,
           delay: 150,
@@ -54,67 +76,114 @@ export function EmailDomainChart({className}: PropsType) {
           enabled: true,
           speed: 350,
         },
-      } as any, 
-    },
-    colors: ["#5750F1"], // Set the bar color to your preference
-    plotOptions: {
-      bar: {
-        columnWidth: "55%",
-        borderRadius: 8, // Use borderRadius for rounded bars
       },
+    },
+    colors: ['#5750F1'],
+    plotOptions: {
+       bar: {
+          horizontal: true, // <-- Switch orientation
+          borderRadius: 8,
+          barHeight: '60%', // Optional: adjust bar thickness
+        },
     },
     grid: {
       strokeDashArray: 5,
       yaxis: {
-        lines: {
-          show: true,
-        },
+        lines: { show: true },
       },
     },
     xaxis: {
-      categories: formattedData.domains, // Email domains on the x-axis
-      axisBorder: {
-        show: false,
-      },
-      axisTicks: {
-        show: false,
+      categories: currentPageData.domains,
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+      labels: {
+        style: {
+          fontSize: '12px',
+        },
       },
     },
     yaxis: {
-      title: {
-        text: "Activity Count", // Label for the y-axis
-      },
-      tickAmount: 5, // Control the number of ticks on the y-axis
-      min: 0, // Start at 0
-      max: Math.max(...formattedData.activityCounts) + 20, // Max value for y-axis based on the max count value
+      title: { text: 'Activity Count' },
+      tickAmount: 5,
+      min: 0,
+      max: maxY,
       labels: {
-        formatter: function (value: number) {
-          return `${value}`; // Format the y-axis labels as numbers
-        },
+        formatter: (value: number) => `${value}`,
       },
     },
     dataLabels: {
       enabled: false,
     },
     tooltip: {
-      marker: {
-        show: true,
-      },
+      marker: { show: true },
     },
   };
-console.log(className)
+
+  const handlePrev = () => {
+    setPage((prev) => Math.max(prev - 1, 0));
+  };
+
+  const handleNext = () => {
+    setPage((prev) => Math.min(prev + 1, totalPages - 1));
+  };
+
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFilterMode(e.target.value as 'highlyActive' | 'all');
+    setPage(0); // reset page on filter change
+  };
+
   return (
-    <div className={cn("rounded-[10px] bg-white px-7.5 pb-6 pt-7.5 shadow-1 dark:bg-gray-dark dark:shadow-card", className)}>
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="text-body-2xlg font-bold text-dark dark:text-white">Email Domains Activity</h2>
+    <div
+      className={cn(
+        'rounded-[10px] bg-white px-7.5 pb-6 pt-7.5 shadow-1 dark:bg-gray-dark dark:shadow-card',
+        className
+      )}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+        <h2 className="text-body-2xlg font-bold text-dark dark:text-white">
+          Email Domains Activity
+        </h2>
+
+        <select
+          onChange={handleFilterChange}
+          value={filterMode}
+          className="rounded border border-gray-300 px-3 py-1 text-sm dark:bg-gray-700 dark:text-white"
+        >
+          <option value="highlyActive">Highly Active Only</option>
+          <option value="all">Show All (Paginated)</option>
+        </select>
       </div>
 
       <Chart
         options={options}
-        series={[{ name: "Activities", data: formattedData.activityCounts }]}
-        type="bar" // Ensure the chart type is correctly specified
+        series={[{ name: 'Activities', data: currentPageData.activityCounts }]}
+        type="bar"
         height={350}
       />
+
+      {filterMode === 'all' && totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-center gap-3">
+          <button
+            onClick={handlePrev}
+            disabled={page === 0}
+            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 dark:bg-gray-700 dark:hover:bg-gray-600"
+          >
+            Prev
+          </button>
+          <span className="text-gray-600 dark:text-gray-300">
+            Page {page + 1} of {totalPages}
+          </span>
+          <button
+            onClick={handleNext}
+            disabled={page === totalPages - 1}
+            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 dark:bg-gray-700 dark:hover:bg-gray-600"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }
+
+export default EmailDomainChart

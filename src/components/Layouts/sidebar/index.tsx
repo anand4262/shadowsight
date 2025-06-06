@@ -42,7 +42,7 @@ export function Sidebar() {
   const filteredNavData = NAV_DATA.map((section) => ({
     ...section,
     items: section.items.filter((item) => {
-      if (item.title === "Dashboard") {
+      if (item.title === "Dashboard" || item.title === "OverView") {
         return totalRecords > 0;
       }
       return true;

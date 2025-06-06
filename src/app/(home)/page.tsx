@@ -6,7 +6,7 @@ import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
 
 import { RootState } from "@/store/Store";
-import { useTotalCSVRecordCount } from "@/utils/GlobalHelpers";
+import { useTotalCSVRecordCount, useFlatCSVData } from "@/utils/GlobalHelpers";
 import MultiSelect from "@/components/MultiSelect";
 import DownloadJSONButton from "@/components/DownloadJSONButton";
 import DownloadImageButton from "@/components/DownloadImageButton";
@@ -15,7 +15,7 @@ import { LazyChartMap, ChartKey } from "@/utils/LazyChartMap";
 
 export default function Home() {
   const router = useRouter();
-  const CSVRecords = useSelector((state: RootState) => state.csv.data);
+ const CSVRecords = useFlatCSVData();
   const selected = useSelector((state: RootState) => state.selected.selected);
   const totalRecords = useTotalCSVRecordCount();
   const dashboardRef = useRef<HTMLDivElement | null>(null);

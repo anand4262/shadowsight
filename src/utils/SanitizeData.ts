@@ -2,7 +2,7 @@
 import {CSVRecord} from "@/store/types/CSVTypes"
 
 
-    interface ExtendedCSVRecord extends CSVRecord {
+   export  interface ExtendedCSVRecord extends CSVRecord {
       dataVolumeMB: number; 
     }
   // Async data sanitization function

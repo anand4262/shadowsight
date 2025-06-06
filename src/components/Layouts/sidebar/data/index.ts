@@ -23,6 +23,12 @@ export const NAV_DATA: NavSection[] = [
         items: [],
       },
       {
+        title: "OverView",
+        icon: Icons.User,
+        url: "/overview",
+        items: [],
+      },
+      {
         title: "File Upload",
         icon: Icons.Alphabet,
         url: "/upload",

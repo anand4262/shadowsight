@@ -40,13 +40,13 @@ const DataLeakageByUserChart: React.FC<{ className?: string }> = ({ className })
 },
     },
     colors: ['#5750F1'],
-    plotOptions: {
-  bar: {
-    horizontal: true, // <-- Switch orientation
-    borderRadius: 8,
-    barHeight: '60%', // Optional: adjust bar thickness
-  },
-},
+      plotOptions: {
+        bar: {
+          horizontal: true, // <-- Switch orientation
+          borderRadius: 8,
+          barHeight: '60%', // Optional: adjust bar thickness
+        },
+      },
 
     xaxis: {
       categories: paginatedLabels,

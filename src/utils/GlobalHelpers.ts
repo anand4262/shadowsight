@@ -99,7 +99,6 @@ export const getActivityDataByDate = (uploadedFiles: any[]) => {
 };
 
 
-  
 
 export const getActivityCountByRiskRange = (
   data: { activityId: string; riskScore: number }[],
@@ -175,51 +174,7 @@ export const getDataLeakageByDate = (
 };
 
 
-/* export const getManagerOutcomeDistribution = (data: any[]) => {
-  const counts: Record<string, number> = {
-    knownGoodActivity: 0,
-    employeeCounselled: 0,
-    escalated: 0,
-    unknown: 0,
-  };
 
-  for (const row of data) {
-    const action = typeof row.managerAction === 'string'
-      ? row.managerAction.trim().toLowerCase()
-      : '';
-
-    switch (action) {
-      case 'knowngoodactivity':
-        counts.knownGoodActivity++;
-        break;
-      case 'employeecounselled':
-        counts.employeeCounselled++;
-        break;
-      case 'escalated':
-        counts.escalated++;
-        break;
-      default:
-        counts.unknown++;
-        break;
-    }
-  }
-
-  const labels = [
-    'Known Good Activity',
-    'Employee Counselled',
-    'Escalated',
-    'Unknown'
-  ];
-
-  const series = [
-    counts.knownGoodActivity,
-    counts.employeeCounselled,
-    counts.escalated,
-    counts.unknown
-  ];
-
-  return { labels, series };
-}; */
 
 export const getManagerOutcomeDistribution = (data: any[]) => {
   const counts: Record<string, number> = {};

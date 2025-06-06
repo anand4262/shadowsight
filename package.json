@@ -4,16 +4,15 @@
   "version": "1.2.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build && next export",
-    "start": "next start",
-    "export": "next export",
-    "deploy": "GITHUB_PAGES=true npm run build && gh-pages -d out",
-    "lint": "next lint",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
-  },
+  "dev": "next dev",
+  "build": "next build",    
+  "start": "next start",
+  "deploy": "GITHUB_PAGES=true npm run build && gh-pages -d out",
+  "lint": "next lint",
+  "test": "jest",
+  "test:watch": "jest --watch",
+  "test:coverage": "jest --coverage"
+},
   "dependencies": {
     "@reduxjs/toolkit": "^2.7.0",
     "@tensorflow/tfjs": "^4.22.0",

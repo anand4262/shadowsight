@@ -8,6 +8,10 @@ export const useFetchCSVData = (): Record<string, CSVRecord[]> => {
   return data ?? {}; 
 };
 
+export const useFetchProcessedData = () => {
+ const rawCSVData = useFetchCSVData();
+return  processData(rawCSVData);
+}
 
 export const useFlatCSVData = (): CSVRecord[] => {
   const groupedData = useSelector((state: RootState) => state.csv.data);
@@ -25,14 +29,41 @@ export const useTotalCSVRecordCount = (): number => {
 };
 
 
-export const processData = (data: any[]) => {
-    const processed = data.reduce((acc, record) => {
-      acc[record.integration] = (acc[record.integration] || 0) + 1;
-      return acc;
-    }, {} as { [key: string]: number });
-  
-    return processed;
+export const processData = (groupedData: Record<string, CSVRecord[]>) => {
+  const allRecords = Object.values(groupedData).flat();
+
+  let totalRecords = 0;
+  let highestRiskScore = -Infinity;
+  let lowestRiskScore = Infinity;
+  let totalRiskScore = 0;
+  const uniqueUsers = new Set<string>();
+
+  for (const record of allRecords) {
+    totalRecords += 1;
+
+    const risk = record.riskScore; // already a number
+    if (!isNaN(risk)) {
+      totalRiskScore += risk;
+      highestRiskScore = Math.max(highestRiskScore, risk);
+      lowestRiskScore = Math.min(lowestRiskScore, risk);
+    }
+
+    if (record.user) {
+      uniqueUsers.add(record.user);
+    }
+  }
+
+  const avgRiskScore = totalRecords > 0 ? totalRiskScore / totalRecords : 0;
+
+  return {
+    totalRecords,
+    highestRiskScore,
+    lowestRiskScore,
+    avgRiskScore: parseFloat(avgRiskScore.toFixed(2)),
+    uniqueUsers: uniqueUsers.size,
   };
+};
+
 
 
  // utils/GlobalHelpers.ts
@@ -313,3 +344,23 @@ export const getSensitiveDataBreachSummary = (data: any[]) => {
     seriesData: [piiCount, phiCount, pciCount]
   };
 };
+
+export function computeSummaryStats(records: any[]) {
+  if (!records.length) return null;
+
+  const totalRecords = records.length;
+  const riskScores = records.map((r) => r.riskScore);
+  const uniqueUsers = new Set(records.map((r) => r.userId)).size;
+  const highestRiskScore = Math.max(...riskScores);
+  const lowestRiskScore = Math.min(...riskScores);
+  const avgRiskScore =
+    riskScores.reduce((sum, score) => sum + score, 0) / totalRecords;
+
+  return {
+    totalRecords,
+    uniqueUsers,
+    highestRiskScore,
+    lowestRiskScore,
+    avgRiskScore: Number(avgRiskScore.toFixed(2)),
+  };
+}

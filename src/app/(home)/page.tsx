@@ -11,7 +11,7 @@ import MultiSelect from "@/components/MultiSelect";
 import DownloadJSONButton from "@/components/DownloadJSONButton";
 import DownloadImageButton from "@/components/DownloadImageButton";
 import ChartSkeleton from "@/components/ui/chartSkeleton";
-import { LazyChartMap, ChartKey } from "@/utils/lazyChartMap";
+import { LazyChartMap, ChartKey } from "@/utils/LazyChartMap";
 
 export default function Home() {
   const router = useRouter();

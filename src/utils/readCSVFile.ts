@@ -11,7 +11,6 @@ const readCSVFile = async (file: File): Promise<any> => {
         skipEmptyLines: true,
         dynamicTyping: true,
         complete: (result) => {
-          console.log("Parsed Small File:", result.data);
           resolve(result.data);
         },
         error: (error) => reject(error),
@@ -28,7 +27,6 @@ const readCSVFile = async (file: File): Promise<any> => {
           parsedData.push(row.data);
         },
         complete: () => {
-          console.log("Parsed Large File:", parsedData);
           resolve(parsedData);
         },
         error: (error) => reject(error),

@@ -35,9 +35,6 @@ import {CSVRecord} from "@/store/types/CSVTypes"
           dataVolumeMB: await validateNumber(record.dataVolumeMB), // Validate dataVolumeMB
         };
       }));
-  
-      // Return the cleaned data once processing is complete
-      console.log(cleanedData)
       return cleanedData;
     } catch (error: unknown) {
         // Ensure that error is an instance of Error before accessing .message
@@ -152,17 +149,5 @@ import {CSVRecord} from "@/store/types/CSVTypes"
     // Add more records as necessary
   ];
   
-  // Calling the async function and handling the sanitized data
- /*  const handleSanitizedData = async () => {
-    const sanitizedData = await sanitizeDataAsync(inputData);
-  
-    if (sanitizedData.length === 0) {
-      console.log("Data sanitization failed or there was an error.");
-    } else {
-      console.log("Sanitized data:", sanitizedData);
-    }
-  };
-  
-  // Call the sanitization function
-  handleSanitizedData(); */
+
  

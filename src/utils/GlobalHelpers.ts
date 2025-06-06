@@ -364,3 +364,25 @@ export function computeSummaryStats(records: any[]) {
     avgRiskScore: Number(avgRiskScore.toFixed(2)),
   };
 }
+import { getKMeansLabels } from './MLHelps';
+
+export const enrichAndClusterRecords = (records: any[]) => {
+  // Step 1: Enrich records
+  const enriched = records.map((row) => ({
+    ...row,
+    emailCount: row.emailCount ?? 0,
+    usbCount: row.usbCount ?? 0,
+    cloudCount: row.cloudCount ?? 0,
+    riskScore: row.riskScore ?? 0,
+  }));
+
+  // Step 2: Apply KMeans clustering
+  const clusterLabels = getKMeansLabels(enriched);
+
+  // Step 3: Merge cluster label into each record
+  return enriched.map((row, idx) => ({
+    ...row,
+    cluster: clusterLabels[idx],
+  }));
+};
+

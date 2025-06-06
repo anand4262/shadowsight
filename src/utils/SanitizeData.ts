@@ -1,38 +1,41 @@
+import { CSVRecord } from "@/store/types/CSVTypes";
 
-import {CSVRecord} from "@/store/types/CSVTypes"
+interface ExtendedCSVRecord extends CSVRecord {
+  dataVolumeMB: number;
+}
 
-
-   export  interface ExtendedCSVRecord extends CSVRecord {
-      dataVolumeMB: number; 
+// Async data sanitization function
+export const sanitizeDataAsync = async (
+  data: ExtendedCSVRecord[]
+): Promise<ExtendedCSVRecord[]> => {
+  try {
+    if (!Array.isArray(data) || data.length === 0) {
+      throw new Error("Invalid or empty data");
     }
-  // Async data sanitization function
-  export const sanitizeDataAsync = async (data: ExtendedCSVRecord[]): Promise<ExtendedCSVRecord[]> => {
-    try {
-      // Check if the data is an array and is not empty
-      if (!Array.isArray(data) || data.length === 0) {
-        throw new Error("Invalid or empty data");
-      }
-  
-      // Process the data (trimming, filling missing values, etc.)
-      const cleanedData = await Promise.all(data.map(async (record: ExtendedCSVRecord) => {
-        // Calculate risk score first (you only calculate once)
+
+    const cleanedData: ExtendedCSVRecord[] = await Promise.all(
+      data.map(async (record: ExtendedCSVRecord) => {
         const calculatedRiskScore = calculateRiskScore(record);
-        const rowPolicyData = (typeof record.policiesBreached === 'string')? JSON.parse(record.policiesBreached): record.policiesBreached;
-        const rawValues = (typeof record.values === 'string')? JSON.parse(record.values): record.values;
+        const rowPolicyData =
+          typeof record.policiesBreached === "string"
+            ? JSON.parse(record.policiesBreached)
+            : record.policiesBreached;
+        const rawValues =
+          typeof record.values === "string"
+            ? JSON.parse(record.values)
+            : record.values;
+
         return {
           ...record,
-          // Trimming whitespace from string fields
-          user: (record.user || '').trim(),
-          integration: (record.integration || '').trim(),
+          user: (record.user || "").trim(),
+          integration: (record.integration || "").trim(),
           date: formatDate(record.date),
-          time: (record.time || '').trim(),
-          // Filling missing values
+          time: (record.time || "").trim(),
           policiesBreached: rowPolicyData || {},
-          values: rawValues|| {},
-          managerAction: record.managerAction || 'Unknown',
-          // Validating numeric fields
-          riskScore: await validateNumber(calculatedRiskScore),  
-          dataVolumeMB: await validateNumber(record.dataVolumeMB), // Validate dataVolumeMB
+          values: rawValues || {},
+          managerAction: record.managerAction || "Unknown",
+          riskScore: await validateNumber(calculatedRiskScore),
+          dataVolumeMB: await validateNumber(record.dataVolumeMB),
         };
       }));
       return cleanedData;

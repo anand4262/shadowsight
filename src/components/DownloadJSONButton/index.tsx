@@ -4,7 +4,9 @@ import { RootState } from '@/store/Store';
 import { Button } from "@/components/ui-elements/button";
 
 const DownloadJSONButton: React.FC = () => {
-  const jsonData = useSelector((state: RootState) => state.csv.data);
+  const jsonData = Object.values(
+    useSelector((state: RootState) => state.csv.data)
+  ).flat(); // Flatten to CSVRecord[]
 
   const handleDownload = () => {
     if (!jsonData || jsonData.length === 0) return;
@@ -24,13 +26,12 @@ const DownloadJSONButton: React.FC = () => {
   };
 
   return (
-
     <Button
-        onClick={handleDownload}
-        label="Download Data"
-        variant="primary"
-        size="default"
-        shape="rounded"
+      onClick={handleDownload}
+      label="Download Data"
+      variant="primary"
+      size="default"
+      shape="rounded"
     />
   );
 };

@@ -1,6 +1,6 @@
 import * as Icons from "../icons";
 
-type NavItem = {
+export type NavItem = {
   title: string;
   icon: any; // or a specific type if you have one
   url: string;

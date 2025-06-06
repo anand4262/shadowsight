@@ -1,4 +1,3 @@
-// sidebar.tsx
 "use client";
 
 import { Logo } from "@/components/logo";
@@ -11,34 +10,34 @@ import { ArrowLeftIcon, ChevronUp } from "./icons";
 import { MenuItem } from "./menu-item";
 import { useSidebarContext } from "./sidebar-context";
 import { AnimatePresence, motion } from "framer-motion";
-import type {NavSection} from "./data/index"
-import {useTotalCSVRecordCount} from "@/utils/GlobalHelpers"
+import type { NavSection, NavItem } from "./data";
+import { useTotalCSVRecordCount } from "@/utils/GlobalHelpers";
 
 export function Sidebar() {
   const pathname = usePathname();
   const { setIsOpen, isOpen, isMobile, toggleSidebar } = useSidebarContext();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const totalRecords = useTotalCSVRecordCount(); 
+  const totalRecords = useTotalCSVRecordCount();
+
   const toggleExpanded = (title: string) => {
-    setExpandedItems((prev) => (prev.includes(title) ? [] : [title]));
+    setExpandedItems((prev) =>
+      prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title]
+    );
   };
 
   useEffect(() => {
-    (NAV_DATA as NavSection[]).some((section) => {
-      return section.items.some((item) => {
-        return item.items.some((subItem) => {
-          if (subItem.url === pathname) {
-            if (!expandedItems.includes(item.title)) {
-              toggleExpanded(item.title);
-            }
+    (NAV_DATA as NavSection[]).some((section) =>
+      section.items.some((item) =>
+        item.items.some((subItem) => {
+          if (subItem.url === pathname && !expandedItems.includes(item.title)) {
+            toggleExpanded(item.title);
             return true;
           }
-        });
-      });
-    });
+        })
+      )
+    );
   }, [pathname]);
 
-  // Conditionally show Dashboard
   const filteredNavData = NAV_DATA.map((section) => ({
     ...section,
     items: section.items.filter((item) => {
@@ -46,7 +45,7 @@ export function Sidebar() {
         return totalRecords > 0;
       }
       return true;
-    })
+    }),
   }));
 
   return (
@@ -100,7 +99,7 @@ export function Sidebar() {
                 <nav role="navigation" aria-label={section.label}>
                   <ul className="space-y-2">
                     <AnimatePresence initial={true}>
-                      {section.items.map((item) => (
+                      {section.items.map((item: NavItem) => (
                         <motion.li
                           key={item.title}
                           initial={{ opacity: 0, x: -15 }}
@@ -126,7 +125,10 @@ export function Sidebar() {
                               </MenuItem>
 
                               {expandedItems.includes(item.title) && (
-                                <ul className="ml-9 mr-0 space-y-1.5 pb-[15px] pr-0 pt-2" role="menu">
+                                <ul
+                                  className="ml-9 mr-0 space-y-1.5 pb-[15px] pr-0 pt-2"
+                                  role="menu"
+                                >
                                   {item.items.map((subItem) => (
                                     <li key={subItem.title} role="none">
                                       <MenuItem
@@ -142,24 +144,15 @@ export function Sidebar() {
                               )}
                             </div>
                           ) : (
-                            (() => {
-                              const href =
-                                "url" in item
-                                  ? item.url + ""
-                                  : "/" + item.title.toLowerCase().split(" ").join("-");
-
-                              return (
-                                <MenuItem
-                                  className="flex items-center gap-3 py-3"
-                                  as="link"
-                                  href={href}
-                                  isActive={pathname === href}
-                                >
-                                  <item.icon className="size-6 shrink-0" aria-hidden="true" />
-                                  <span>{item.title}</span>
-                                </MenuItem>
-                              );
-                            })()
+                            <MenuItem
+                              className="flex items-center gap-3 py-3"
+                              as="link"
+                              href={item.url}
+                              isActive={pathname === item.url}
+                            >
+                              <item.icon className="size-6 shrink-0" aria-hidden="true" />
+                              <span>{item.title}</span>
+                            </MenuItem>
                           )}
                         </motion.li>
                       ))}

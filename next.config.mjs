@@ -1,4 +1,3 @@
-// next.config.js
 /** @type {import('next').NextConfig} */
 const isGitHubPages = process.env.GITHUB_PAGES === 'true';
 
@@ -10,3 +9,5 @@ const nextConfig = {
     unoptimized: true,
   },
 };
+
+module.exports = nextConfig;
